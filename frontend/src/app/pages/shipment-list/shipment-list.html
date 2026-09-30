@@ -1,0 +1,87 @@
+<div class="page-shell">
+  <div class="page-header">
+    <div>
+      <h2>All Shipments</h2>
+      <p>Assign drivers and manage shipment status.</p>
+    </div>
+    <a mat-stroked-button color="primary" routerLink="/admin/dashboard">Dashboard</a>
+  </div>
+
+  <mat-card class="panel">
+    <mat-card-content>
+      <div *ngIf="loading" class="state">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+
+      <div *ngIf="error && !loading" class="state error">{{ error }}</div>
+
+      <div *ngIf="!loading && shipments.length === 0" class="state">No shipments found.</div>
+
+      <div *ngIf="!loading && shipments.length > 0" class="table-wrap">
+        <table mat-table [dataSource]="shipments" class="shipments-table">
+          <ng-container matColumnDef="trackingNumber">
+            <th mat-header-cell *matHeaderCellDef>Tracking #</th>
+            <td mat-cell *matCellDef="let s"><strong>{{ s.trackingNumber }}</strong></td>
+          </ng-container>
+
+          <ng-container matColumnDef="recipientName">
+            <th mat-header-cell *matHeaderCellDef>Recipient</th>
+            <td mat-cell *matCellDef="let s">
+              {{ s.recipientName }}<br>
+              <small>{{ s.dropoffAddress }}</small>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="serviceTier">
+            <th mat-header-cell *matHeaderCellDef>Tier</th>
+            <td mat-cell *matCellDef="let s">{{ s.serviceTier }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let s">
+              <span class="status-chip" [attr.data-status]="s.status">{{ s.status }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="priceAmount">
+            <th mat-header-cell *matHeaderCellDef>Price</th>
+            <td mat-cell *matCellDef="let s">€{{ s.priceAmount | number:'1.2-2' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="assign">
+            <th mat-header-cell *matHeaderCellDef>Assign Driver</th>
+            <td mat-cell *matCellDef="let s" class="assign-cell">
+              <mat-form-field appearance="outline" class="driver-select">
+                <mat-label>Driver</mat-label>
+                <mat-select [(ngModel)]="selectedDriver[s.id]" [name]="'driver' + s.id">
+                  <mat-option *ngFor="let d of drivers" [value]="d.id">{{ d.name }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <button
+                mat-flat-button
+                color="primary"
+                [disabled]="busyId === s.id || s.status === 'DELIVERED' || s.status === 'CANCELLED'"
+                (click)="assignDriver(s.id)"
+              >
+                Assign
+              </button>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Update Status</th>
+            <td mat-cell *matCellDef="let s" class="actions-cell">
+              <button mat-stroked-button (click)="updateStatus(s.id, 'PICKED_UP')" [disabled]="busyId === s.id">Picked Up</button>
+              <button mat-stroked-button (click)="updateStatus(s.id, 'DELIVERED')" [disabled]="busyId === s.id">Delivered</button>
+              <button mat-button color="warn" (click)="updateStatus(s.id, 'CANCELLED')" [disabled]="busyId === s.id">Cancel</button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

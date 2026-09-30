@@ -1,0 +1,159 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.welcome-card {
+  background: linear-gradient(135deg, #1b3a6b 0%, #0f172a 100%) !important;
+  color: #fff !important;
+  border-radius: 14px !important;
+}
+
+.welcome-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.welcome-content h2 {
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+
+.welcome-content p {
+  margin: 0;
+  opacity: 0.85;
+}
+
+.create-btn {
+  background-color: #c41e3a !important;
+  color: #fff !important;
+}
+
+.section-card {
+  border-radius: 12px !important;
+}
+
+.track-form {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.track-field {
+  flex: 1 1 280px;
+}
+
+.track-result {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #dbe3ef;
+}
+
+.track-result h4 {
+  margin: 0 0 10px;
+  color: #1b3a6b;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.error-text {
+  color: #c41e3a;
+  margin-top: 12px;
+}
+
+.state-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 36px 12px;
+  color: #64748b;
+  text-align: center;
+}
+
+.state-block.error {
+  color: #c41e3a;
+}
+
+.empty-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: #94a3b8;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  margin-top: 8px;
+}
+
+.shipments-table {
+  width: 100%;
+}
+
+.shipments-table th {
+  background: #1b3a6b;
+  color: #fff;
+  font-weight: 700;
+}
+
+.tracking-cell {
+  font-weight: 700;
+  color: #1b3a6b;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+.status-chip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.status-chip[data-status='BOOKED'] {
+  background: rgba(245, 158, 11, 0.2);
+  color: #b45309;
+}
+
+.status-chip[data-status='DRIVER_ASSIGNED'] {
+  background: rgba(37, 99, 235, 0.15);
+  color: #1d4ed8;
+}
+
+.status-chip[data-status='PICKED_UP'] {
+  background: rgba(27, 58, 107, 0.15);
+  color: #1b3a6b;
+}
+
+.status-chip[data-status='DELIVERED'] {
+  background: rgba(16, 185, 129, 0.18);
+  color: #047857;
+}
+
+.status-chip[data-status='CANCELLED'] {
+  background: rgba(196, 30, 58, 0.15);
+  color: #c41e3a;
+}

@@ -1,0 +1,109 @@
+<mat-toolbar class="vd-toolbar">
+  <a routerLink="/" class="brand" aria-label="VAN DIRECT home">
+    <span class="brand-text">VAN DIRECT</span>
+  </a>
+
+  <nav class="nav-links" *ngIf="isLoggedIn()">
+    <!-- ADMIN -->
+    <ng-container *ngIf="isAdmin()">
+      <a mat-button routerLink="/admin/users" routerLinkActive="active-link">Users</a>
+      <a mat-button routerLink="/admin/shipments" routerLinkActive="active-link">Shipments</a>
+      <a mat-button routerLink="/admin/pending-drivers" routerLinkActive="active-link">Pending Drivers</a>
+      <a mat-button routerLink="/admin/drivers" routerLinkActive="active-link">All Drivers</a>
+      <a mat-button routerLink="/admin/live-shipments" routerLinkActive="active-link">Live Map</a>
+      <a mat-button routerLink="/admin/charts" routerLinkActive="active-link">Stats</a>
+    </ng-container>
+
+    <!-- CUSTOMER -->
+    <ng-container *ngIf="isCustomer()">
+      <a mat-button routerLink="/customer/dashboard" routerLinkActive="active-link">My Shipments</a>
+      <a mat-button routerLink="/customer/shipments/new" routerLinkActive="active-link">New Shipment</a>
+      <a mat-button routerLink="/customer/track" routerLinkActive="active-link">Track</a>
+    </ng-container>
+
+    <!-- DRIVER -->
+    <ng-container *ngIf="isDriver()">
+      <a mat-button routerLink="/driver/deliveries" routerLinkActive="active-link">My Deliveries</a>
+      <label class="driver-toggle">
+        <input
+          type="checkbox"
+          [checked]="driverOnline"
+          (change)="toggleDriverAvailability($any($event.target).checked)"
+        />
+        <span>{{ driverOnline ? 'Online' : 'Offline' }}</span>
+      </label>
+    </ng-container>
+  </nav>
+
+  <span class="spacer"></span>
+
+  <!-- Guest -->
+  <ng-container *ngIf="!isLoggedIn()">
+    <a mat-button routerLink="/track">Track</a>
+    <a mat-button routerLink="/login">Login</a>
+    <a mat-flat-button color="primary" routerLink="/register" class="register-btn">Register</a>
+  </ng-container>
+
+  <!-- Logged in -->
+  <ng-container *ngIf="isLoggedIn()">
+    <!-- Notifications bell -->
+    <button
+      mat-icon-button
+      [matMenuTriggerFor]="notifMenu"
+      class="notif-btn"
+      aria-label="Notifications"
+    >
+      <mat-icon [matBadge]="unreadCount()" [matBadgeHidden]="unreadCount() === 0" matBadgeColor="warn">
+        notifications
+      </mat-icon>
+    </button>
+    <mat-menu #notifMenu="matMenu" class="notif-menu">
+      <div class="notif-menu-header" (click)="$event.stopPropagation()">
+        <span class="notif-menu-title">Notifications</span>
+        <span *ngIf="unreadCount() > 0" class="notif-badge-pill">{{ unreadCount() }} unread</span>
+      </div>
+      <mat-divider></mat-divider>
+      <div *ngIf="notifications().length === 0" class="notif-empty" (click)="$event.stopPropagation()">
+        No notifications yet
+      </div>
+      <div class="notif-list-container">
+        <button
+          mat-menu-item
+          *ngFor="let n of notifications()"
+          (click)="markNotificationAsRead(n, $event)"
+          class="notif-menu-item"
+          [class.notif-unread]="!n.readFlag"
+        >
+          <mat-icon [color]="n.readFlag ? '' : 'warn'">
+            {{ n.readFlag ? 'notifications_none' : 'notifications_active' }}
+          </mat-icon>
+          <div class="notif-content">
+            <span class="notif-title">{{ n.title }}</span>
+            <span class="notif-message">{{ n.message }}</span>
+          </div>
+        </button>
+      </div>
+    </mat-menu>
+
+    <button mat-button [matMenuTriggerFor]="userMenu" class="user-menu-btn">
+      <mat-icon>account_circle</mat-icon>
+      <span class="welcome-text">Welcome, {{ displayName() }}</span>
+      <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+    <mat-menu #userMenu="matMenu">
+      <button mat-menu-item disabled>
+        <mat-icon>badge</mat-icon>
+        <span>{{ authService.getUserRole() }}</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
+  </ng-container>
+</mat-toolbar>
+
+<main class="main-content">
+  <ng-content></ng-content>
+</main>

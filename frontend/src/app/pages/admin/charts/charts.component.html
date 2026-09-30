@@ -1,0 +1,63 @@
+<div class="admin-charts-container">
+  <div class="header-section">
+    <h2>Analytics Dashboard</h2>
+    <div class="range-toggle">
+      <button mat-button
+              [class.active]="range === 'week'"
+              (click)="setRange('week')">Week</button>
+      <button mat-button
+              [class.active]="range === 'month'"
+              (click)="setRange('month')">Month</button>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="48"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading" class="charts-grid">
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Shipments per Day</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <canvas baseChart
+                [type]="'line'"
+                [data]="shipmentChartData"
+                [options]="shipmentChartOptions">
+        </canvas>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Revenue per Day</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <canvas baseChart
+                [type]="'line'"
+                [data]="revenueChartData"
+                [options]="revenueChartOptions">
+        </canvas>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="chart-card stats-card">
+      <mat-card-header>
+        <mat-card-title>Average Delivery Times</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="delivery-time-stats">
+          <div class="stat-item">
+            <div class="stat-label">Overall Average</div>
+            <div class="stat-value">{{ deliveryTimeStats?.overallAverageMinutes?.toFixed(1) || 0 }} min</div>
+          </div>
+          <div *ngFor="let tier of deliveryTimeStats?.averageByServiceTier | keyvalue" class="stat-item">
+            <div class="stat-label">{{ tier.key }}</div>
+            <div class="stat-value">{{ tier.value.toFixed(1) }} min</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

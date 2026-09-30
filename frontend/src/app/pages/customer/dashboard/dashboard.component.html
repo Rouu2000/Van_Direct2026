@@ -1,0 +1,117 @@
+<div class="dashboard">
+  <mat-card class="welcome-card">
+    <mat-card-content class="welcome-content">
+      <div>
+        <h2>Welcome back, {{ userName }}!</h2>
+        <p>Manage your packages and track live deliveries with VAN DIRECT.</p>
+      </div>
+      <a mat-flat-button class="create-btn" routerLink="/customer/shipments/new">
+        <mat-icon>add</mat-icon>
+        Create New Shipment
+      </a>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="section-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>search</mat-icon>
+      <mat-card-title>Track a Shipment</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form (ngSubmit)="onTrackSubmit()" class="track-form">
+        <mat-form-field appearance="outline" class="track-field">
+          <mat-label>Tracking Number</mat-label>
+          <input matInput [(ngModel)]="trackingQuery" name="trackingQuery" placeholder="e.g. TRK-123456" />
+        </mat-form-field>
+        <button mat-flat-button color="primary" type="submit">Track</button>
+      </form>
+
+      <div *ngIf="trackedShipment" class="track-result">
+        <h4>{{ trackedShipment.trackingNumber }} — {{ trackedShipment.status }}</h4>
+        <div class="result-grid">
+          <div><strong>Recipient:</strong> {{ trackedShipment.recipientName }}</div>
+          <div><strong>Drop-off:</strong> {{ trackedShipment.dropoffAddress }}</div>
+          <div><strong>Service:</strong> {{ trackedShipment.serviceTier }}</div>
+          <div><strong>Price:</strong> €{{ trackedShipment.priceAmount | number:'1.2-2' }}</div>
+        </div>
+      </div>
+      <p *ngIf="trackError" class="error-text">{{ trackError }}</p>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="section-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>local_shipping</mat-icon>
+      <mat-card-title>My Shipments</mat-card-title>
+      <mat-card-subtitle>Your booking history</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngIf="loading" class="state-block">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading your shipments...</p>
+      </div>
+
+      <div *ngIf="error && !loading" class="state-block error">
+        <p>{{ error }}</p>
+        <button mat-stroked-button color="primary" (click)="loadShipments()">Retry</button>
+      </div>
+
+      <div *ngIf="!loading && !error && shipments.length === 0" class="state-block">
+        <mat-icon class="empty-icon">inventory_2</mat-icon>
+        <h3>No shipments yet</h3>
+        <p>Book your first delivery to get started.</p>
+        <a mat-flat-button class="create-btn" routerLink="/customer/shipments/new">Create New Shipment</a>
+      </div>
+
+      <div *ngIf="!loading && shipments.length > 0" class="table-wrap">
+        <table mat-table [dataSource]="shipments" class="shipments-table">
+          <ng-container matColumnDef="trackingNumber">
+            <th mat-header-cell *matHeaderCellDef>Tracking #</th>
+            <td mat-cell *matCellDef="let s" class="tracking-cell">{{ s.trackingNumber }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="recipientName">
+            <th mat-header-cell *matHeaderCellDef>Recipient</th>
+            <td mat-cell *matCellDef="let s">{{ s.recipientName }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="parcelCount">
+            <th mat-header-cell *matHeaderCellDef>Parcels</th>
+            <td mat-cell *matCellDef="let s">{{ s.parcelCount != null ? s.parcelCount : 1 }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let s">
+              <span class="status-chip" [attr.data-status]="s.status">{{ s.status }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="priceAmount">
+            <th mat-header-cell *matHeaderCellDef>Price</th>
+            <td mat-cell *matCellDef="let s">€{{ s.priceAmount | number:'1.2-2' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let s" class="actions-cell">
+              <a mat-stroked-button [routerLink]="['/track']" [queryParams]="{ tn: s.trackingNumber }">Track</a>
+              <button
+                mat-button
+                color="warn"
+                *ngIf="canCancel(s)"
+                [disabled]="cancellingId === s.id"
+                (click)="cancelShipment(s.id)"
+              >
+                {{ cancellingId === s.id ? 'Cancelling...' : 'Cancel' }}
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -1,0 +1,121 @@
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  text-align: center;
+  padding: 20px 12px;
+  border-radius: 12px !important;
+}
+
+.stat-icon {
+  font-size: 36px;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 8px;
+}
+
+.stat-icon.users { color: #1b3a6b; }
+.stat-icon.shipments { color: #c41e3a; }
+.stat-icon.parcels { color: #2563eb; }
+.stat-icon.delivered { color: #4caf50; }
+.stat-icon.drivers { color: #ff9800; }
+.stat-icon.revenue { color: #2196f3; }
+.stat-icon.cancellation { color: #f44336; }
+
+.stat-number {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #1b3a6b;
+  line-height: 1.1;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-top: 4px;
+}
+
+.section-card {
+  border-radius: 12px !important;
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  margin-top: 8px;
+}
+
+.users-table {
+  width: 100%;
+}
+
+.users-table th {
+  background: #1b3a6b;
+  color: #fff;
+  font-weight: 700;
+}
+
+.state-block {
+  display: flex;
+  justify-content: center;
+  padding: 28px;
+  color: #64748b;
+}
+
+.status-chip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.status-chip[data-status='ACTIVE'] {
+  background: rgba(16, 185, 129, 0.18);
+  color: #047857;
+}
+
+.status-chip[data-status='PENDING_APPROVAL'] {
+  background: rgba(245, 158, 11, 0.2);
+  color: #b45309;
+}
+
+.status-chip[data-status='SUSPENDED'] {
+  background: rgba(196, 30, 58, 0.15);
+  color: #c41e3a;
+}
+
+.guest-hero {
+  text-align: center;
+  padding: 28px 12px;
+}
+
+.guest-hero h2 {
+  margin: 0 0 8px;
+  color: #c41e3a;
+}
+
+.guest-hero p {
+  margin: 0 0 16px;
+  color: #64748b;
+}

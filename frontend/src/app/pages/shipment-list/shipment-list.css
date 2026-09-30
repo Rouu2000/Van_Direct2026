@@ -1,0 +1,81 @@
+.page-shell {
+  padding: 8px 0 24px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.page-header h2 {
+  margin: 0;
+  color: #1b3a6b;
+}
+
+.page-header p {
+  margin: 4px 0 0;
+  color: #64748b;
+}
+
+.panel {
+  border-radius: 12px !important;
+}
+
+.state {
+  display: flex;
+  justify-content: center;
+  padding: 36px;
+  color: #64748b;
+}
+
+.state.error {
+  color: #c41e3a;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.shipments-table {
+  width: 100%;
+}
+
+.shipments-table th {
+  background: #1b3a6b;
+  color: #fff;
+  font-weight: 700;
+}
+
+.assign-cell,
+.actions-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+
+.driver-select {
+  width: 160px;
+  margin: 0;
+}
+
+.status-chip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #e2e8f0;
+}
+
+.status-chip[data-status='BOOKED'] { background: rgba(245, 158, 11, 0.2); color: #b45309; }
+.status-chip[data-status='DRIVER_ASSIGNED'] { background: rgba(37, 99, 235, 0.15); color: #1d4ed8; }
+.status-chip[data-status='PICKED_UP'] { background: rgba(27, 58, 107, 0.15); color: #1b3a6b; }
+.status-chip[data-status='DELIVERED'] { background: rgba(16, 185, 129, 0.18); color: #047857; }
+.status-chip[data-status='CANCELLED'] { background: rgba(196, 30, 58, 0.15); color: #c41e3a; }

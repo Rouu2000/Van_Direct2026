@@ -1,0 +1,60 @@
+<div class="track-page">
+  <mat-card class="track-card">
+    <div class="brand">
+      <h2>VAN DIRECT</h2>
+      <p>Public Shipment Tracking</p>
+    </div>
+
+    <form (ngSubmit)="track()" class="track-form">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Tracking Number</mat-label>
+        <input matInput [(ngModel)]="trackingNumber" name="trackingNumber" placeholder="TRK-123456" />
+        <mat-icon matPrefix>local_shipping</mat-icon>
+      </mat-form-field>
+      <button mat-flat-button class="btn-red" type="submit" [disabled]="loading">
+        {{ loading ? 'Searching...' : 'Track Package' }}
+      </button>
+    </form>
+
+    <div *ngIf="loading" class="state">
+      <mat-spinner diameter="36"></mat-spinner>
+    </div>
+
+    <div *ngIf="error" class="error">{{ error }}</div>
+
+    <div *ngIf="shipment && !loading" class="result">
+      <div class="status-row">
+        <span class="tracking">{{ shipment.trackingNumber }}</span>
+        <span class="status-chip" [attr.data-status]="shipment.status">{{ shipment.status }}</span>
+      </div>
+
+      <p class="estimate">{{ estimatedNote() }}</p>
+
+      <div *ngIf="isLiveTrackable()" class="live-location">
+        <h4>Live Driver Location</h4>
+        <div #mapContainer class="map-container"></div>
+        <div *ngIf="!driverLocation" class="waiting-driver">Waiting for driver</div>
+        <div *ngIf="driverLocation" class="muted map-meta">
+          Updated {{ driverLocation.timestamp }}
+        </div>
+        <div *ngIf="liveTrackingError" class="muted">{{ liveTrackingError }}</div>
+      </div>
+
+      <div class="grid">
+        <div><strong>Recipient</strong><br />{{ shipment.recipientName }}</div>
+        <div><strong>Phone</strong><br />{{ shipment.recipientPhone }}</div>
+        <div><strong>Pickup</strong><br />{{ shipment.pickupAddress }}</div>
+        <div><strong>Drop-off</strong><br />{{ shipment.dropoffAddress }}</div>
+        <div><strong>Service</strong><br />{{ shipment.serviceTier }}</div>
+        <div><strong>Price</strong><br />EUR {{ shipment.priceAmount | number:'1.2-2' }}</div>
+      </div>
+
+      <h4>Parcels</h4>
+      <div *ngIf="parcels.length === 0" class="muted">No parcel details available.</div>
+      <div *ngFor="let p of parcels; let i = index" class="parcel">
+        <strong>Parcel {{ i + 1 }}</strong> - {{ p.description }}
+        <span class="muted"> - {{ p.weightKg }} kg - {{ p.sizeCategory }}</span>
+      </div>
+    </div>
+  </mat-card>
+</div>

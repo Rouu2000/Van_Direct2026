@@ -1,0 +1,45 @@
+<div class="auth-page">
+  <mat-card class="auth-card">
+    <div class="auth-brand">
+      <span class="truck-icon">🚚</span>
+      <span class="brand-name">VAN DIRECT</span>
+    </div>
+
+    <h2 class="auth-title">Welcome Back</h2>
+    <p class="auth-subtitle">Sign in to continue</p>
+
+    <div *ngIf="errorMessage" class="error-alert">
+      <mat-icon>error</mat-icon>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="auth-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email Address</mat-label>
+        <input matInput type="email" name="email" [(ngModel)]="credentials.email" required />
+        <mat-icon matPrefix>email</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Password</mat-label>
+        <input matInput [type]="hidePassword ? 'password' : 'text'" name="password" [(ngModel)]="credentials.password" required />
+        <mat-icon matPrefix>lock</mat-icon>
+        <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+          <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <div class="forgot-link-container">
+        <a routerLink="/forgot-password" class="forgot-link">Forgot password?</a>
+      </div>
+
+      <button mat-flat-button color="warn" class="submit-btn" type="submit" [disabled]="submitting">
+        {{ submitting ? 'Signing in...' : 'Login' }}
+      </button>
+    </form>
+
+    <p class="auth-footer">
+      Don't have an account? <a routerLink="/register">Register here</a>
+    </p>
+  </mat-card>
+</div>

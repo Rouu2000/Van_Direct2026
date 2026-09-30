@@ -1,0 +1,61 @@
+<div class="live-shipments-container">
+  <div class="header-section">
+    <h2>Live Shipments</h2>
+    <div class="legend">
+      <div class="legend-item">
+        <span class="legend-icon pickup">📦</span>
+        <span>Pickup</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-icon dropoff">🏁</span>
+        <span>Dropoff</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-icon driver">🚚</span>
+        <span>Driver</span>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="48"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading" class="content-grid">
+    <mat-card class="map-card">
+      <mat-card-content>
+        <div id="live-shipments-map" class="map-container"></div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="list-card">
+      <mat-card-header>
+        <mat-card-title>Active Shipments ({{ shipments.length }})</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="shipments.length === 0" class="empty-state">
+          <mat-icon>local_shipping</mat-icon>
+          <p>No active shipments</p>
+        </div>
+        <div *ngFor="let shipment of shipments" class="shipment-item">
+          <div class="shipment-header">
+            <span class="tracking-number">{{ shipment.trackingNumber }}</span>
+            <span class="status-badge" [style.background-color]="getStatusColor(shipment.status)">
+              {{ shipment.status }}
+            </span>
+          </div>
+          <div class="shipment-details">
+            <div class="detail-item">
+              <mat-icon>place</mat-icon>
+              <span>{{ shipment.pickupAddress }}</span>
+            </div>
+            <div class="detail-item">
+              <mat-icon>flag</mat-icon>
+              <span>{{ shipment.dropoffAddress }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

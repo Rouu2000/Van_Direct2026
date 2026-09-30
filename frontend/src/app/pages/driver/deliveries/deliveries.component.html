@@ -1,0 +1,113 @@
+<div class="deliveries-container">
+  <div class="header">
+    <h2>My Deliveries</h2>
+    <p>Accept assigned shipments, update delivery progress, and stream live location.</p>
+  </div>
+
+  <div class="availability-panel">
+    <label class="switch">
+      <input
+        type="checkbox"
+        [checked]="availability === 'AVAILABLE'"
+        (change)="setAvailability($any($event.target).checked)"
+      />
+      <span class="slider"></span>
+    </label>
+    <span>{{ availability === 'AVAILABLE' ? 'Online and available' : 'Offline' }}</span>
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <p>Loading deliveries...</p>
+  </div>
+
+  <div *ngIf="error" class="error-alert">{{ error }}</div>
+
+  <div *ngIf="!loading && !error && deliveries.length === 0" class="loading-state">
+    <p>No deliveries assigned yet.</p>
+  </div>
+
+  <div *ngIf="!loading && deliveries.length > 0" class="deliveries-table-card">
+    <table class="deliveries-table">
+      <thead>
+        <tr>
+          <th>Tracking #</th>
+          <th>Route</th>
+          <th>Tier / Price</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let delivery of deliveries">
+          <td class="tracking-code">
+            <strong>{{ delivery.trackingNumber }}</strong>
+          </td>
+          <td>
+            <strong>Pickup</strong><br />
+            <span class="sub-text">{{ delivery.pickupAddress }}</span><br />
+            <strong>Drop-off</strong><br />
+            <span class="sub-text">{{ delivery.dropoffAddress }}</span><br />
+            <span class="sub-text">{{ delivery.recipientName }} - {{ delivery.recipientPhone }}</span>
+          </td>
+          <td>
+            {{ delivery.serviceTier }}<br />
+            <strong>EUR {{ delivery.priceAmount | number:'1.2-2' }}</strong>
+          </td>
+          <td>
+            <span class="badge" [ngClass]="getStatusBadgeClass(delivery.status)">
+              {{ delivery.status }}
+            </span>
+          </td>
+          <td>
+            <div class="action-group">
+              <button
+                *ngIf="delivery.status === 'DRIVER_ASSIGNED'"
+                (click)="accept(delivery.id)"
+                [disabled]="updatingId === delivery.id"
+                class="btn-update"
+              >
+                {{ updatingId === delivery.id ? 'Accepting...' : 'Accept' }}
+              </button>
+              <button
+                *ngIf="delivery.status === 'DRIVER_ASSIGNED'"
+                (click)="updateStatus(delivery.id, 'PICKED_UP')"
+                [disabled]="updatingId === delivery.id"
+                class="btn-details"
+              >
+                Mark Picked Up
+              </button>
+              <button
+                *ngIf="delivery.status === 'DRIVER_ASSIGNED'"
+                (click)="decline(delivery.id)"
+                [disabled]="updatingId === delivery.id"
+                class="btn-decline"
+              >
+                Decline
+              </button>
+              <button
+                *ngIf="delivery.status === 'PICKED_UP'"
+                (click)="updateStatus(delivery.id, 'DELIVERED')"
+                [disabled]="updatingId === delivery.id"
+                class="btn-update"
+              >
+                Mark Delivered
+              </button>
+              <button (click)="openDetails(delivery)" class="btn-details">Details</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="selectedDelivery" class="modal-backdrop" (click)="closeDetails()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3>{{ selectedDelivery.trackingNumber }}</h3>
+      <p><strong>Pickup:</strong> {{ selectedDelivery.pickupAddress }}</p>
+      <p><strong>Drop-off:</strong> {{ selectedDelivery.dropoffAddress }}</p>
+      <p><strong>Recipient:</strong> {{ selectedDelivery.recipientName }} ({{ selectedDelivery.recipientPhone }})</p>
+      <p><strong>Status:</strong> {{ selectedDelivery.status }}</p>
+      <button class="btn-update" (click)="closeDetails()">Close</button>
+    </div>
+  </div>
+</div>

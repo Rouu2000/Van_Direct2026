@@ -1,0 +1,96 @@
+<div class="auth-page">
+  <mat-card class="auth-card">
+    <div class="auth-brand">
+      <span class="truck-icon">🚚</span>
+      <span class="brand-name">VAN DIRECT</span>
+    </div>
+
+    <h2 class="auth-title">Create an Account</h2>
+
+    <div *ngIf="errorMessage" class="error-alert">
+      <mat-icon>error</mat-icon>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <div *ngIf="successMessage" class="success-alert">
+      <mat-icon>check_circle</mat-icon>
+      <span>{{ successMessage }}</span>
+    </div>
+
+    <div *ngIf="showPendingMessage" class="success-alert pending">
+      <mat-icon>hourglass_top</mat-icon>
+      <div>
+        <strong>Your application is under review.</strong>
+        <p>You will be notified once approved. You cannot log in until then.</p>
+      </div>
+    </div>
+
+    <div *ngIf="!showPendingMessage" class="mode-toggle">
+      <mat-button-toggle-group [value]="isDriverMode ? 'driver' : 'customer'" (change)="toggleMode($event.value)">
+        <mat-button-toggle value="customer">Sign up as Customer</mat-button-toggle>
+        <mat-button-toggle value="driver">Become a Driver</mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" *ngIf="!showPendingMessage" class="auth-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Full Name</mat-label>
+        <input matInput name="name" [(ngModel)]="user.name" required />
+        <mat-icon matPrefix>person</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email Address</mat-label>
+        <input matInput type="email" name="email" [(ngModel)]="user.email" required />
+        <mat-icon matPrefix>email</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Password</mat-label>
+        <input matInput [type]="hidePassword ? 'password' : 'text'" name="passwordHash" [(ngModel)]="user.passwordHash" required />
+        <mat-icon matPrefix>lock</mat-icon>
+        <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+          <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Phone Number</mat-label>
+        <input matInput name="phone" [(ngModel)]="user.phone" />
+        <mat-icon matPrefix>phone</mat-icon>
+      </mat-form-field>
+
+      <input type="hidden" name="role" [(ngModel)]="user.role" />
+
+      <ng-container *ngIf="isDriverMode">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Vehicle Type</mat-label>
+          <mat-select name="vehicleType" [(ngModel)]="user.vehicleType" required>
+            <mat-option value="BIKE">Bike</mat-option>
+            <mat-option value="CAR">Car</mat-option>
+            <mat-option value="VAN">Van</mat-option>
+          </mat-select>
+          <mat-icon matPrefix>directions_car</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>License Number</mat-label>
+          <input matInput name="licenseNumber" [(ngModel)]="user.licenseNumber" required />
+          <mat-icon matPrefix>badge</mat-icon>
+        </mat-form-field>
+      </ng-container>
+
+      <button mat-flat-button color="warn" class="submit-btn" type="submit" [disabled]="submitting">
+        {{ submitting ? 'Registering...' : 'Register' }}
+      </button>
+    </form>
+
+    <p class="auth-footer" *ngIf="!showPendingMessage">
+      Already have an account? <a routerLink="/login">Login here</a>
+    </p>
+
+    <p class="auth-footer" *ngIf="showPendingMessage">
+      <a routerLink="/login">Back to Login</a>
+    </p>
+  </mat-card>
+</div>

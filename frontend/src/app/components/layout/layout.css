@@ -1,0 +1,116 @@
+.vd-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #ffffff !important;
+  color: #1b3a6b !important;
+  border-bottom: 2px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  gap: 8px;
+  min-height: 64px;
+  padding: 0 16px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  margin-right: 16px;
+  padding: 4px 2px;
+  border-radius: 8px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.brand:hover {
+  opacity: 0.85;
+  transform: scale(1.03);
+}
+
+.brand:focus-visible {
+  outline: 2px solid #c41e3a;
+  outline-offset: 3px;
+}
+
+.brand-text {
+  font-size: 22px;
+  font-weight: 800;
+  color: #c41e3a;
+  letter-spacing: 2px;
+  line-height: 1;
+  white-space: nowrap;
+  border-bottom: 3px solid #c41e3a;
+  padding-bottom: 2px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.nav-links a {
+  color: #1b3a6b !important;
+  font-weight: 600;
+}
+
+.nav-links a.active-link {
+  color: #c41e3a !important;
+  border-bottom: 3px solid #c41e3a;
+  border-radius: 0;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.register-btn {
+  background-color: #c41e3a !important;
+  color: #fff !important;
+}
+
+.user-menu-btn {
+  color: #1b3a6b !important;
+  font-weight: 600;
+}
+
+.welcome-text {
+  margin: 0 4px;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.driver-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  color: #1b3a6b;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.driver-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: #16a34a;
+}
+
+.main-content {
+  padding: 24px 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .welcome-text {
+    display: none;
+  }
+
+  .nav-links a {
+    padding: 0 6px;
+    font-size: 0.85rem;
+  }
+}

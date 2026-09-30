@@ -1,0 +1,219 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary-red: #C41E3A;
+  --primary-red-hover: #A0182E;
+  --primary-blue: #1B3A6B;
+  --primary-blue-hover: #132A4F;
+  --bg-light: #F5F7FA;
+  --card-bg: #FFFFFF;
+  --text-dark: #1A1A2E;
+  --text-muted: #6C757D;
+  --text-light: #FFFFFF;
+  --border-color: #E2E8F0;
+  --success-green: #28A745;
+  --warning-orange: #FFC107;
+  --info-blue: #007BFF;
+  --danger-red: #DC3545;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+a {
+  color: var(--primary-blue);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--primary-red);
+}
+
+/* Card Container Styles */
+.card-container {
+  background-color: var(--card-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 28px;
+  margin: 24px auto;
+  max-width: 1100px;
+  border: 1px solid var(--border-color);
+}
+
+/* Page Header inside Cards */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--bg-light);
+}
+
+.card-title {
+  color: var(--primary-blue);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Button Styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background-color: var(--primary-red);
+  color: var(--text-light);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-red-hover);
+}
+
+.btn-secondary {
+  background-color: var(--primary-blue);
+  color: var(--text-light);
+}
+
+.btn-secondary:hover {
+  background-color: var(--primary-blue-hover);
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 2px solid var(--primary-blue);
+  color: var(--primary-blue);
+}
+
+.btn-outline:hover {
+  background-color: var(--primary-blue);
+  color: var(--text-light);
+}
+
+/* Form Styles */
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 6px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: #FAFAFA;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-red);
+  box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.15);
+  background-color: #FFFFFF;
+}
+
+/* Table Styles */
+.table-responsive {
+  overflow-x: auto;
+}
+
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 0.95rem;
+}
+
+.custom-table th {
+  background-color: var(--primary-blue);
+  color: var(--text-light);
+  font-weight: 600;
+  text-align: left;
+  padding: 12px 16px;
+}
+
+.custom-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-dark);
+}
+
+.custom-table tbody tr:nth-child(even) {
+  background-color: #F8FAFC;
+}
+
+.custom-table tbody tr:hover {
+  background-color: #EDF2F7;
+}
+
+/* Status Badges */
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 50px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-active, .badge-delivered {
+  background-color: rgba(40, 167, 69, 0.15);
+  color: var(--success-green);
+}
+
+.badge-pending {
+  background-color: rgba(255, 193, 7, 0.2);
+  color: #B78103;
+}
+
+.badge-in-transit {
+  background-color: rgba(27, 58, 107, 0.15);
+  color: var(--primary-blue);
+}
+
+.badge-cancelled, .badge-fragile {
+  background-color: rgba(196, 30, 58, 0.15);
+  color: var(--primary-red);
+}
+
+.badge-safe {
+  background-color: rgba(40, 167, 69, 0.15);
+  color: var(--success-green);
+}

@@ -1,0 +1,34 @@
+<div class="card-container">
+  <div class="card-header">
+    <h1 class="card-title">Parcels</h1>
+  </div>
+
+  <div class="table-responsive">
+    <table class="custom-table" *ngIf="parcels && parcels.length > 0; else noParcels">
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th>Weight (kg)</th>
+          <th>Size</th>
+          <th>Declared Value</th>
+          <th>Shipment ID</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of parcels">
+          <td><strong>{{ p.description || 'N/A' }}</strong></td>
+          <td>{{ p.weightKg != null ? p.weightKg + ' kg' : 'N/A' }}</td>
+          <td>{{ p.sizeCategory || 'N/A' }}</td>
+          <td>{{ p.declaredValue != null ? ('€' + p.declaredValue) : '—' }}</td>
+          <td>{{ p.shipmentId || 'N/A' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ng-template #noParcels>
+    <div style="text-align: center; padding: 40px 0; color: var(--text-muted);">
+      <p style="font-size: 1.1rem; margin-bottom: 16px;">No parcels found. Parcels are created with customer shipments.</p>
+    </div>
+  </ng-template>
+</div>

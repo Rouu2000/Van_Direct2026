@@ -1,0 +1,118 @@
+<div class="htabs">
+  <!-- Tab list -->
+  <div class="htabs-list" role="tablist" aria-label="Quick actions">
+    <button
+      role="tab"
+      [attr.aria-selected]="activeTab() === 'estimate'"
+      [class.active]="activeTab() === 'estimate'"
+      class="htabs-tab"
+      (click)="setTab('estimate')"
+      (keydown)="onTabKey($event, 'estimate')"
+      id="tab-estimate" aria-controls="panel-estimate">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+      Price & time
+    </button>
+    <button
+      role="tab"
+      [attr.aria-selected]="activeTab() === 'track'"
+      [class.active]="activeTab() === 'track'"
+      class="htabs-tab"
+      (click)="setTab('track')"
+      (keydown)="onTabKey($event, 'track')"
+      id="tab-track" aria-controls="panel-track">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+      Track
+    </button>
+    <button
+      role="tab"
+      [attr.aria-selected]="activeTab() === 'ship'"
+      [class.active]="activeTab() === 'ship'"
+      class="htabs-tab"
+      (click)="setTab('ship')"
+      (keydown)="onTabKey($event, 'ship')"
+      id="tab-ship" aria-controls="panel-ship">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 8h-3V4H3a2 2 0 0 0-2 2v11h2a3 3 0 0 0 6 0h6a3 3 0 0 0 6 0h2v-5l-3-4z"/></svg>
+      Ship
+    </button>
+  </div>
+
+  <!-- Panel: Price estimate -->
+  <div role="tabpanel" id="panel-estimate" aria-labelledby="tab-estimate"
+       *ngIf="activeTab() === 'estimate'" class="htabs-panel">
+    <div class="htabs-form">
+      <div class="htabs-row">
+        <div class="htabs-field">
+          <label class="htabs-label" for="pickup-city">Pickup city</label>
+          <input class="htabs-input" id="pickup-city" type="text" placeholder="e.g. Tunis"
+                 [(ngModel)]="est.pickupCity" name="pickupCity">
+        </div>
+        <div class="htabs-field">
+          <label class="htabs-label" for="dropoff-city">Drop-off city</label>
+          <input class="htabs-input" id="dropoff-city" type="text" placeholder="e.g. Sfax"
+                 [(ngModel)]="est.dropoffCity" name="dropoffCity">
+        </div>
+      </div>
+      <div class="htabs-row">
+        <div class="htabs-field htabs-field-sm">
+          <label class="htabs-label" for="weight">Weight (kg)</label>
+          <input class="htabs-input" id="weight" type="number" min="0.1" step="0.5"
+                 [(ngModel)]="est.weightKg" name="weightKg">
+        </div>
+        <div class="htabs-field htabs-field-sm">
+          <label class="htabs-label" for="size">Size</label>
+          <select class="htabs-input" id="size" [(ngModel)]="est.size" name="size">
+            <option value="SMALL">Small</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="LARGE">Large</option>
+          </select>
+        </div>
+        <div class="htabs-field htabs-field-sm">
+          <label class="htabs-label" for="tier">Service</label>
+          <select class="htabs-input" id="tier" [(ngModel)]="est.tier" name="tier">
+            <option value="STANDARD">Standard</option>
+            <option value="EXPRESS">Express</option>
+          </select>
+        </div>
+      </div>
+      <div *ngIf="estimateError()" class="htabs-error">{{ estimateError() }}</div>
+      <div *ngIf="estimateResult()" class="htabs-result">
+        <div class="htabs-result-row">
+          <span>Estimated price</span>
+          <strong class="htabs-price">€{{ estimateResult()!.price | number:'1.2-2' }}</strong>
+        </div>
+        <div class="htabs-result-row muted">
+          <span>Distance</span>
+          <span>{{ estimateResult()!.distance | number:'1.1-1' }} km</span>
+        </div>
+        <p class="htabs-disclaimer">Final price may differ based on exact addresses and parcel count.</p>
+      </div>
+      <button class="htabs-btn" (click)="doEstimate()" [disabled]="estimating()">
+        {{ estimating() ? 'Calculating…' : 'Get estimate' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Panel: Track -->
+  <div role="tabpanel" id="panel-track" aria-labelledby="tab-track"
+       *ngIf="activeTab() === 'track'" class="htabs-panel">
+    <p class="htabs-intro">Enter your tracking number to see the latest status and live driver position.</p>
+    <div class="htabs-track-row">
+      <input class="htabs-input htabs-track-input" type="text" placeholder="TRK-123456"
+             [(ngModel)]="trackingNumber" (keyup.enter)="doTrack()" aria-label="Tracking number">
+      <button class="htabs-btn" (click)="doTrack()">Track parcel</button>
+    </div>
+    <div *ngIf="trackError" class="htabs-error">{{ trackError }}</div>
+  </div>
+
+  <!-- Panel: Ship -->
+  <div role="tabpanel" id="panel-ship" aria-labelledby="tab-ship"
+       *ngIf="activeTab() === 'ship'" class="htabs-panel">
+    <p class="htabs-intro">Book a door-to-door parcel pickup in under two minutes. Choose STANDARD or EXPRESS delivery.</p>
+    <a [routerLink]="shipRoute" class="htabs-btn htabs-btn-full">
+      {{ auth.isCustomer() ? 'Book a shipment' : 'Register to ship' }}
+    </a>
+    <p *ngIf="!auth.isLoggedIn()" class="htabs-sublink">
+      Already have an account? <a routerLink="/login">Log in</a>
+    </p>
+  </div>
+</div>

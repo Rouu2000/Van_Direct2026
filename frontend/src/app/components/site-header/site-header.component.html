@@ -1,0 +1,261 @@
+<!-- Overlay behind open mega-panel -->
+<div class="sh-overlay" *ngIf="activePanel()" (click)="closeAll()" aria-hidden="true"></div>
+
+<!-- ══════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════ -->
+<header class="sh-root" [class.scrolled]="scrolled()" (clickOutside)="closeAll()">
+  <div class="sh-inner">
+
+    <!-- Logo -->
+    <a routerLink="/" class="sh-logo" aria-label="VAN DIRECT home page">
+      <svg width="30" height="30" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="#C41E3A"/>
+        <path d="M5 21V14l7-5h8l7 5v7H5Z" fill="#fff" opacity=".9"/>
+        <circle cx="11" cy="22" r="3" fill="#fff"/>
+        <circle cx="21" cy="22" r="3" fill="#fff"/>
+      </svg>
+      <span class="sh-logo-text">VAN DIRECT</span>
+    </a>
+
+    <!-- Desktop main nav: full mega-menu for guests and customers -->
+    <nav class="sh-nav" aria-label="Main navigation" *ngIf="!isStrippedHeader()">
+      <ul class="sh-nav-list" role="list">
+        <li *ngFor="let panel of visiblePanels()" class="sh-nav-item"
+            (mouseenter)="onNavEnter(panel.id)"
+            (mouseleave)="onNavLeave()">
+          <button class="sh-nav-btn"
+                  [class.active]="activePanel() === panel.id"
+                  (click)="togglePanel(panel.id)"
+                  [attr.aria-expanded]="activePanel() === panel.id"
+                  aria-haspopup="true">
+            {{ panel.label }}
+            <svg class="sh-caret" [class.open]="activePanel() === panel.id"
+                 width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M7 10l5 5 5-5z"/>
+            </svg>
+          </button>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Desktop stripped nav for Driver -->
+    <nav class="sh-nav sh-nav-stripped" aria-label="Driver navigation" *ngIf="isDriver()">
+      <a routerLink="/driver/deliveries" routerLinkActive="sh-nav-link-active" class="sh-nav-link-plain">
+        <span class="material-icons sh-nav-plain-icon">local_shipping</span>
+        My Deliveries
+      </a>
+    </nav>
+
+    <!-- Desktop stripped nav for Admin -->
+    <nav class="sh-nav sh-nav-stripped" aria-label="Admin navigation" *ngIf="isAdmin()">
+      <a routerLink="/admin/dashboard" routerLinkActive="sh-nav-link-active" class="sh-nav-link-plain">
+        <span class="material-icons sh-nav-plain-icon">dashboard</span>
+        Admin Portal
+      </a>
+    </nav>
+
+    <!-- Right controls -->
+    <div class="sh-right">
+
+      <!-- Notifications (only when logged in) -->
+      <div class="sh-dropdown-wrap" *ngIf="loggedIn()">
+        <button class="sh-icon-btn notif-btn" (click)="toggleNotif($event)"
+                [attr.aria-expanded]="notifOpen()" aria-haspopup="true"
+                aria-label="Notifications">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 0 0 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4a1.5 1.5 0 0 0-3 0v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+          </svg>
+          <span *ngIf="unreadCount() > 0" class="sh-badge" aria-label="{{ unreadCount() }} unread">{{ unreadCount() }}</span>
+        </button>
+        <div class="sh-dropdown notif-dropdown" *ngIf="notifOpen()" role="dialog" aria-label="Notifications">
+          <div class="sh-dd-header">
+            <span>Notifications</span>
+            <button class="sh-text-btn" (click)="markAllRead()">Mark all read</button>
+          </div>
+          <div class="sh-dd-empty" *ngIf="notifications().length === 0">No notifications yet</div>
+          <div class="sh-notif-list">
+            <button *ngFor="let n of notifications()" class="sh-notif-item"
+                    [class.unread]="!n.readFlag" (click)="markRead(n, $event)">
+              <span class="sh-notif-dot" [class.unread]="!n.readFlag"></span>
+              <div class="sh-notif-body">
+                <span class="sh-notif-title">{{ n.title }}</span>
+                <span class="sh-notif-msg">{{ n.message }}</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account button / dropdown -->
+      <div class="sh-dropdown-wrap">
+        <button class="sh-account-btn"
+                (click)="toggleAccount($event)"
+                [attr.aria-expanded]="accountOpen()"
+                aria-haspopup="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+          </svg>
+          <span class="sh-account-label">{{ loggedIn() ? displayName() : 'Account' }}</span>
+          <svg class="sh-caret" [class.open]="accountOpen()"
+               width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M7 10l5 5 5-5z"/>
+          </svg>
+        </button>
+
+        <div class="sh-dropdown account-dropdown" *ngIf="accountOpen()">
+          <!-- Logged in -->
+          <ng-container *ngIf="loggedIn()">
+            <div class="sh-dd-user">
+              <span class="sh-dd-avatar">{{ displayName().charAt(0).toUpperCase() }}</span>
+              <div>
+                <span class="sh-dd-name">{{ displayName() }}</span>
+                <span class="sh-dd-role">{{ auth.getUserRole() }}</span>
+              </div>
+            </div>
+            <div class="sh-dd-sep"></div>
+            <a [routerLink]="getMyAreaRoute()" class="sh-dd-item" (click)="closeAll()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+              My area
+            </a>
+            <ng-container *ngIf="isCustomer()">
+              <a routerLink="/customer/shipments/new" class="sh-dd-item" (click)="closeAll()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                New shipment
+              </a>
+            </ng-container>
+            <div class="sh-dd-sep"></div>
+            <button class="sh-dd-item logout-item" (click)="logout()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+              Sign out
+            </button>
+          </ng-container>
+          <!-- Logged out -->
+          <ng-container *ngIf="!loggedIn()">
+            <a routerLink="/login"    class="sh-dd-item" (click)="closeAll()">Log in</a>
+            <a routerLink="/register" class="sh-dd-item" (click)="closeAll()">Create an account</a>
+            <div class="sh-dd-sep"></div>
+            <a routerLink="/register" class="sh-dd-item" (click)="closeAll()">Become a driver</a>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Register CTA (guests only) -->
+      <a *ngIf="!loggedIn()" routerLink="/register" class="btn btn-primary btn-sm sh-register-btn">
+        Register
+      </a>
+
+      <!-- Hamburger (mobile) -->
+      <button class="sh-hamburger" (click)="openDrawer()"
+              [attr.aria-expanded]="drawerOpen()" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mega-menu panels — only for guests and customers -->
+  <ng-container *ngIf="!isStrippedHeader()">
+    <div *ngFor="let panel of visiblePanels()"
+         class="sh-mega" [class.open]="activePanel() === panel.id"
+         role="region" [attr.aria-label]="panel.label + ' menu'"
+         (mouseenter)="onPanelEnter()" (mouseleave)="onPanelLeave()">
+      <div class="sh-mega-inner">
+        <!-- Link columns -->
+        <div class="sh-mega-cols">
+          <div *ngFor="let col of panel.columns" class="sh-mega-col">
+            <span class="sh-mega-heading">{{ col.heading }}</span>
+            <ul role="list" class="sh-mega-links">
+              <li *ngFor="let link of col.links">
+                <a [routerLink]="link.route" class="sh-mega-link" (click)="closeAll()">
+                  <span *ngIf="link.icon" class="material-icons sh-mega-icon" aria-hidden="true">{{ link.icon }}</span>
+                  <span class="sh-mega-link-text">
+                    <span class="sh-mega-link-label">{{ link.label }}</span>
+                    <span *ngIf="link.desc" class="sh-mega-link-desc">{{ link.desc }}</span>
+                  </span>
+                </a>
+              </li>
+            </ul>
+            <!-- Tracking input inside the Track panel -->
+            <div *ngIf="panel.id === 'track' && col.heading === 'Track your shipment'" class="sh-track-box">
+              <input class="sh-track-input" type="text" placeholder="Enter tracking number"
+                     [(ngModel)]="trackQuery" (keyup.enter)="doTrack()" aria-label="Tracking number">
+              <button class="btn btn-primary btn-sm" (click)="doTrack()">Track</button>
+            </div>
+          </div>
+        </div>
+        <!-- Promo tile -->
+        <div *ngIf="panel.promo" class="sh-mega-promo"
+             [style.border-color]="panel.promo.color">
+          <div class="sh-promo-headline" [style.color]="panel.promo.color">{{ panel.promo.headline }}</div>
+          <p class="sh-promo-body">{{ panel.promo.body }}</p>
+          <a [routerLink]="panel.promo.ctaRoute" class="btn btn-sm sh-promo-btn"
+             [style.background]="panel.promo.color" (click)="closeAll()">
+            {{ panel.promo.cta }} →
+          </a>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</header>
+
+<!-- ══════════════════════════════════════════
+     MOBILE DRAWER
+══════════════════════════════════════════ -->
+<div class="sh-drawer-overlay" *ngIf="drawerOpen()" (click)="closeDrawer()" aria-hidden="true"></div>
+<nav class="sh-drawer" [class.open]="drawerOpen()" aria-label="Mobile navigation">
+  <div class="sh-drawer-header">
+    <span class="sh-logo-text" style="color:#fff">VAN DIRECT</span>
+    <button class="sh-drawer-close" (click)="closeDrawer()" aria-label="Close menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+    </button>
+  </div>
+
+  <div class="sh-drawer-body">
+    <!-- Accordion panels — guests and customers only -->
+    <ng-container *ngIf="!isStrippedHeader()">
+      <div *ngFor="let panel of visiblePanels()" class="sh-drawer-section">
+        <button class="sh-drawer-toggle" (click)="toggleDrawerSection(panel.id)"
+                [attr.aria-expanded]="drawerSection() === panel.id">
+          {{ panel.label }}
+          <svg class="sh-caret" [class.open]="drawerSection() === panel.id"
+               width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M7 10l5 5 5-5z"/>
+          </svg>
+        </button>
+        <div class="sh-drawer-panel" [class.open]="drawerSection() === panel.id">
+          <ng-container *ngFor="let col of panel.columns">
+            <a *ngFor="let link of col.links" [routerLink]="link.route" class="sh-drawer-link" (click)="closeDrawer()">
+              {{ link.label }}
+            </a>
+          </ng-container>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Stripped mobile nav for Driver -->
+    <div *ngIf="isDriver()" class="sh-drawer-section">
+      <a routerLink="/driver/deliveries" class="sh-drawer-link" style="padding-left:20px" (click)="closeDrawer()">
+        🚚 My Deliveries
+      </a>
+    </div>
+
+    <!-- Stripped mobile nav for Admin -->
+    <div *ngIf="isAdmin()" class="sh-drawer-section">
+      <a routerLink="/admin/dashboard" class="sh-drawer-link" style="padding-left:20px" (click)="closeDrawer()">
+        🛠 Admin Portal
+      </a>
+    </div>
+
+    <!-- Auth links -->
+    <div class="sh-drawer-auth">
+      <ng-container *ngIf="!loggedIn()">
+        <a routerLink="/login"    class="btn btn-secondary" (click)="closeDrawer()">Log in</a>
+        <a routerLink="/register" class="btn btn-primary"   (click)="closeDrawer()">Register</a>
+      </ng-container>
+      <ng-container *ngIf="loggedIn()">
+        <a [routerLink]="getMyAreaRoute()" class="btn btn-secondary" (click)="closeDrawer()">My area</a>
+        <button class="btn btn-primary" (click)="logout()">Sign out</button>
+      </ng-container>
+    </div>
+  </div>
+</nav>

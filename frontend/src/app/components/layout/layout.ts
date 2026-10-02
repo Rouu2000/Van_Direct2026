@@ -1,6 +1,6 @@
 import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,8 +8,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatBadgeModule } from '@angular/material/badge';
 import { AuthService } from '../../services/auth.service';
-import { DriverService } from '../../services/driver.service';
 import { NotificationService, AppNotification } from '../../services/notification.service';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-layout',
@@ -29,6 +29,9 @@ import { NotificationService, AppNotification } from '../../services/notificatio
   styleUrl: './layout.css'
 })
 export class LayoutComponent implements OnInit {
+  /** Hide the global nav for admin routes — they have their own shell */
+  isAdminRoute = false;
+
   readonly isLoggedIn = computed(() => this.authService.loggedIn());
   readonly isAdmin = computed(() => this.authService.admin());
   readonly isCustomer = computed(() => this.authService.customer());
@@ -38,11 +41,9 @@ export class LayoutComponent implements OnInit {
   );
   readonly unreadCount = computed(() => this.notificationService.unreadCount());
   readonly notifications = computed(() => this.notificationService.notifications());
-  driverOnline = false;
 
   constructor(
     public authService: AuthService,
-    private driverService: DriverService,
     public notificationService: NotificationService,
     private router: Router
   ) {}
@@ -50,10 +51,15 @@ export class LayoutComponent implements OnInit {
   ngOnInit(): void {
     this.authService.hydrateFromStorage();
     if (this.authService.isLoggedIn()) {
-      this.notificationService.fetchNotifications().subscribe({
-        error: () => {}
-      });
+      this.notificationService.fetchNotifications().subscribe({ error: () => {} });
     }
+    // Track current route to hide nav for admin shell
+    this.isAdminRoute = this.router.url.startsWith('/admin');
+    this.router.events
+      .pipe(filter(e => e instanceof NavigationEnd))
+      .subscribe((e: any) => {
+        this.isAdminRoute = (e.urlAfterRedirects || e.url || '').startsWith('/admin');
+      });
   }
 
   markNotificationAsRead(notification: AppNotification, event: Event): void {
@@ -66,19 +72,5 @@ export class LayoutComponent implements OnInit {
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
-  }
-
-  toggleDriverAvailability(online: boolean): void {
-    const driverId = this.authService.getUserId();
-    if (!driverId) return;
-
-    this.driverService.setAvailability(driverId, online ? 'AVAILABLE' : 'OFFLINE').subscribe({
-      next: () => {
-        this.driverOnline = online;
-      },
-      error: () => {
-        this.driverOnline = !online;
-      }
-    });
   }
 }

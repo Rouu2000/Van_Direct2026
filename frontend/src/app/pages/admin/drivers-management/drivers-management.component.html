@@ -1,77 +1,106 @@
-<div class="drivers-management-container">
-  <div class="header-section">
-    <h2>Drivers Management</h2>
+<div class="dt-page">
+  <div class="dt-header">
+    <div>
+      <h2 class="dt-title">All Drivers</h2>
+      <p class="dt-sub">{{ filtered.length }} of {{ drivers.length }} drivers</p>
+    </div>
+    <button class="btn btn-primary btn-sm" (click)="loadDrivers()">
+      <span class="material-icons" style="font-size:16px">refresh</span> Refresh
+    </button>
   </div>
 
-  <mat-card class="drivers-card">
-    <mat-card-header>
-      <mat-card-title>All Drivers ({{ drivers.length }})</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <div *ngIf="loading" class="loading-container">
-        <mat-spinner diameter="36"></mat-spinner>
+  <div class="dt-toolbar">
+    <div class="dt-search">
+      <span class="material-icons dt-search-icon">search</span>
+      <input class="dt-search-input" type="text" placeholder="Search name, email…"
+             [(ngModel)]="searchQuery" (ngModelChange)="applyFilters()">
+    </div>
+    <div class="filter-chips">
+      <button class="chip" [class.active]="statusFilter === ''" (click)="setFilter('')">All</button>
+      <button class="chip chip-green"  [class.active]="statusFilter === 'ACTIVE'"           (click)="setFilter('ACTIVE')">Active</button>
+      <button class="chip chip-orange" [class.active]="statusFilter === 'PENDING_APPROVAL'" (click)="setFilter('PENDING_APPROVAL')">Pending</button>
+      <button class="chip chip-red"    [class.active]="statusFilter === 'SUSPENDED'"        (click)="setFilter('SUSPENDED')">Suspended</button>
+    </div>
+  </div>
+
+  <div class="dt-card">
+    <div *ngIf="loading" class="dt-skeleton-rows">
+      <div *ngFor="let i of [1,2,3,4]" class="skeleton-row">
+        <div class="skeleton w-28"></div><div class="skeleton w-40"></div>
+        <div class="skeleton w-20"></div><div class="skeleton w-24"></div>
       </div>
+    </div>
 
-      <div *ngIf="!loading" class="table-container">
-        <table mat-table [dataSource]="drivers" class="drivers-table">
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
-            <td mat-cell *matCellDef="let driver">
-              <strong>{{ driver.name }}</strong>
+    <div *ngIf="!loading && filtered.length === 0" class="dt-empty">
+      <span class="material-icons dt-empty-icon">directions_car</span>
+      <p>No drivers found</p>
+    </div>
+
+    <div *ngIf="!loading && filtered.length > 0" class="dt-scroll">
+      <table class="dt-table">
+        <thead>
+          <tr>
+            <th>Driver</th>
+            <th>Phone</th>
+            <th>Vehicle</th>
+            <th>Account status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let d of page">
+            <td>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="dt-avatar" [style.background]="avatarColor(d.name)">
+                  {{ d.name?.charAt(0)?.toUpperCase() }}
+                </span>
+                <div>
+                  <span class="dt-primary">{{ d.name }}</span>
+                  <span class="dt-secondary">{{ d.email }}</span>
+                </div>
+              </div>
             </td>
-          </ng-container>
-
-          <ng-container matColumnDef="email">
-            <th mat-header-cell *matHeaderCellDef>Email</th>
-            <td mat-cell *matCellDef="let driver">{{ driver.email }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="phone">
-            <th mat-header-cell *matHeaderCellDef>Phone</th>
-            <td mat-cell *matCellDef="let driver">{{ driver.phone || 'N/A' }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let driver">
-              <span class="status-badge" [style.background-color]="getStatusColor(driver.status)">
-                {{ driver.status }}
+            <td class="dt-secondary" style="display:table-cell">{{ d.phone || '—' }}</td>
+            <td>
+              <span class="vehicle-badge" *ngIf="d.vehicleType">
+                <span class="material-icons" style="font-size:14px">{{ vehicleIcon(d.vehicleType) }}</span>
+                {{ d.vehicleType }}
               </span>
+              <span *ngIf="!d.vehicleType" class="dt-secondary">—</span>
             </td>
-          </ng-container>
-
-          <ng-container matColumnDef="vehicleType">
-            <th mat-header-cell *matHeaderCellDef>Vehicle</th>
-            <td mat-cell *matCellDef="let driver">{{ driver.vehicleType || 'N/A' }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let driver">
-              <button mat-icon-button
-                      (click)="activateDriver(driver.id)"
-                      [disabled]="driver.status === 'ACTIVE'"
-                      matTooltip="Activate">
-                <mat-icon>check_circle</mat-icon>
-              </button>
-              <button mat-icon-button
-                      (click)="suspendDriver(driver.id)"
-                      [disabled]="driver.status === 'SUSPENDED'"
-                      matTooltip="Suspend">
-                <mat-icon>block</mat-icon>
-              </button>
+            <td>
+              <span class="status-chip" [attr.data-status]="d.status">{{ d.status }}</span>
             </td>
-          </ng-container>
+            <td>
+              <div class="action-btns">
+                <button class="btn btn-xs" style="background:var(--success-bg);color:var(--success)"
+                        *ngIf="d.status !== 'ACTIVE'"
+                        (click)="activateDriver(d.id)" title="Activate">
+                  <span class="material-icons" style="font-size:14px">check_circle</span> Activate
+                </button>
+                <button class="btn btn-xs" style="background:var(--danger-bg);color:var(--danger)"
+                        *ngIf="d.status !== 'SUSPENDED'"
+                        (click)="suspendDriver(d.id)" title="Suspend">
+                  <span class="material-icons" style="font-size:14px">block</span> Suspend
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
-
-        <div *ngIf="drivers.length === 0" class="empty-state">
-          <mat-icon>directions_car</mat-icon>
-          <p>No drivers found</p>
-        </div>
+    <div *ngIf="!loading && filtered.length > pageSize" class="dt-pagination">
+      <span class="page-info">{{ pageStart + 1 }}–{{ pageEnd }} of {{ filtered.length }}</span>
+      <div class="page-btns">
+        <button class="page-btn" [disabled]="currentPage === 0" (click)="prevPage()">
+          <span class="material-icons">chevron_left</span>
+        </button>
+        <span class="page-num">{{ currentPage + 1 }} / {{ totalPages }}</span>
+        <button class="page-btn" [disabled]="currentPage >= totalPages - 1" (click)="nextPage()">
+          <span class="material-icons">chevron_right</span>
+        </button>
       </div>
-    </mat-card-content>
-  </mat-card>
+    </div>
+  </div>
 </div>

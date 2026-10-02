@@ -286,4 +286,18 @@ public class SecurityMockMvcTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
+
+    // ── Public estimate endpoint ─────────────────────────────
+    @Test
+    void estimatePrice_isPublicNoAuthRequired() throws Exception {
+        // Should be accessible without a token (returns 200 or 400 on bad input, never 401)
+        String body = """
+            {"serviceTier":"STANDARD","pickupLat":36.8,"pickupLng":10.18,
+             "dropoffLat":36.85,"dropoffLng":10.20,
+             "parcels":[{"weightKg":2,"sizeCategory":"SMALL"}]}""";
+        mockMvc.perform(post("/api/shipments/estimate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().is2xxSuccessful());
+    }
 }

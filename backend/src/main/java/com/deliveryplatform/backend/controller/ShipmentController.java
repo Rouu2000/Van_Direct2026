@@ -109,7 +109,6 @@ public class ShipmentController {
     }
 
     @PostMapping("/estimate")
-    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<?> estimatePrice(@RequestBody EstimateRequest request) {
         try {
             if (request.getParcels() == null || request.getParcels().isEmpty()) {
@@ -176,6 +175,16 @@ public class ShipmentController {
             Map<String, Object> response = new HashMap<>();
             response.put("shipment", shipment);
             response.put("parcels", parcels);
+            // Public endpoint: expose first name + vehicle type only
+            if (shipment.getAssignedDriverId() != null) {
+                userRepository.findById(shipment.getAssignedDriverId()).ifPresent(driver -> {
+                    var dto = new com.deliveryplatform.backend.dto.DriverInfoDto(driver);
+                    Map<String, Object> publicDriver = new HashMap<>();
+                    publicDriver.put("firstName", dto.getFirstName());
+                    publicDriver.put("vehicleType", dto.getVehicleType());
+                    response.put("driver", publicDriver);
+                });
+            }
             return ResponseEntity.ok(response);
         } catch (RuntimeException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Shipment not found"));
@@ -205,6 +214,12 @@ public class ShipmentController {
             Map<String, Object> response = new HashMap<>();
             response.put("shipment", shipment);
             response.put("parcels", parcels);
+            // Authenticated view: full driver info (name, phone, vehicleType — no email/password)
+            if (shipment.getAssignedDriverId() != null) {
+                userRepository.findById(shipment.getAssignedDriverId()).ifPresent(driver -> {
+                    response.put("driver", new com.deliveryplatform.backend.dto.DriverInfoDto(driver));
+                });
+            }
             return ResponseEntity.ok(response);
         } catch (RuntimeException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", ex.getMessage()));

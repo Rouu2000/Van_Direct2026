@@ -1,0 +1,87 @@
+<footer class="sf-root" aria-label="Site footer">
+
+  <!-- Newsletter strip -->
+  <div class="sf-newsletter">
+    <div class="sf-newsletter-inner">
+      <div class="sf-nl-text">
+        <h2 class="sf-nl-title">Stay informed</h2>
+        <p class="sf-nl-sub">Service updates, delivery tips and offers — straight to your inbox.</p>
+      </div>
+      <div class="sf-nl-form" *ngIf="!newsletterDone()">
+        <input class="sf-nl-input" type="email" placeholder="Your email address"
+               [(ngModel)]="newsletterEmail" (keyup.enter)="subscribe()"
+               aria-label="Email address for newsletter">
+        <button class="btn btn-primary sf-nl-btn" (click)="subscribe()">Subscribe</button>
+      </div>
+      <p class="sf-nl-ok" *ngIf="newsletterDone()">
+        <span class="sf-nl-check">✓</span> Thank you! You're subscribed.
+        <em class="sf-nl-note">(Front-end only — no email is sent yet.)</em>
+      </p>
+    </div>
+  </div>
+
+  <!-- Main columns -->
+  <div class="sf-main">
+    <div class="sf-brand-col">
+      <!-- Logo -->
+      <a routerLink="/" class="sf-logo" aria-label="VAN DIRECT home">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#C41E3A"/>
+          <path d="M5 21V14l7-5h8l7 5v7H5Z" fill="#fff" opacity=".9"/>
+          <circle cx="11" cy="22" r="3" fill="#fff"/>
+          <circle cx="21" cy="22" r="3" fill="#fff"/>
+        </svg>
+        <span class="sf-logo-text">VAN DIRECT</span>
+      </a>
+      <p class="sf-brand-tagline">Your parcel. Our promise.<br>Fast, reliable city delivery in Tunisia.</p>
+      <!-- Social icons -->
+      <div class="sf-social" aria-label="Social media links">
+        <a href="#" class="sf-social-btn" aria-label="Facebook" rel="noopener">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        </a>
+        <a href="#" class="sf-social-btn" aria-label="Instagram" rel="noopener">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".5" fill="currentColor"/></svg>
+        </a>
+        <a href="#" class="sf-social-btn" aria-label="LinkedIn" rel="noopener">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+        </a>
+        <a href="#" class="sf-social-btn" aria-label="YouTube" rel="noopener">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.4a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#0F2548"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Link columns — desktop: grid, mobile: accordion -->
+    <div class="sf-cols">
+      <div *ngFor="let col of columns" class="sf-col">
+        <!-- Mobile accordion toggle -->
+        <button class="sf-col-toggle" (click)="toggle(col.id)"
+                [attr.aria-expanded]="openSection() === col.id">
+          {{ col.heading }}
+          <svg class="sf-toggle-icon" [class.open]="openSection() === col.id"
+               width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M7 10l5 5 5-5z"/>
+          </svg>
+        </button>
+        <h3 class="sf-col-heading" aria-hidden="true">{{ col.heading }}</h3>
+        <ul class="sf-col-links" [class.expanded]="openSection() === col.id" role="list">
+          <li *ngFor="let link of col.links">
+            <a [routerLink]="link.route" class="sf-link">{{ link.label }}</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="sf-bottom">
+    <span class="sf-copy">&copy; 2026 VAN DIRECT. All rights reserved.</span>
+    <div class="sf-lang" role="group" aria-label="Language selector">
+      <button class="sf-lang-btn" [class.active]="currentLang() === 'EN'" (click)="setLang('EN')">EN</button>
+      <span class="sf-lang-sep" aria-hidden="true">/</span>
+      <button class="sf-lang-btn" [class.active]="currentLang() === 'FR'" (click)="setLang('FR')">FR</button>
+      <span class="sf-lang-note">(UI only)</span>
+    </div>
+  </div>
+
+</footer>

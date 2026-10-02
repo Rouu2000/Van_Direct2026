@@ -1,0 +1,165 @@
+<div class="adash">
+  <div class="adash-title-row">
+    <h2 class="dt-title">Dashboard</h2>
+    <span class="adash-date">{{ today | date:'EEEE, d MMMM y' }}</span>
+  </div>
+
+  <!-- KPI error -->
+  <div *ngIf="statsError && !loading" class="adash-error">
+    <span class="material-icons" style="color:var(--danger);font-size:20px">error_outline</span>
+    <span>{{ statsError }}</span>
+    <button class="btn btn-outline btn-sm" (click)="loadKpis()">Retry</button>
+  </div>
+
+  <!-- KPI cards -->
+  <ng-container *ngIf="!statsError">
+    <div class="kpi-grid" *ngIf="!loading; else kpiSkel">
+      <!-- Stats from summary endpoint -->
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(196,30,58,.1)">
+          <span class="material-icons" style="color:#C41E3A">local_shipping</span>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ stats?.totalShipments ?? '—' }}</div>
+          <div class="kpi-label">Total Shipments</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(22,163,74,.1)">
+          <span class="material-icons" style="color:#16A34A">check_circle</span>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ stats?.deliveredToday ?? '—' }}</div>
+          <div class="kpi-label">Delivered Today</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(37,99,235,.1)">
+          <span class="material-icons" style="color:#2563EB">directions_car</span>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ stats?.activeDrivers ?? '—' }}</div>
+          <div class="kpi-label">Active Drivers</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(217,119,6,.1)">
+          <span class="material-icons" style="color:#D97706">euro</span>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ stats?.totalRevenue | number:'1.0-0' }}</div>
+          <div class="kpi-label">Total Revenue (€)</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(220,38,38,.1)">
+          <span class="material-icons" style="color:#DC2626">cancel</span>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ stats?.cancellationRate | number:'1.0-1' }}%</div>
+          <div class="kpi-label">Cancellation Rate</div>
+        </div>
+      </div>
+      <!-- Total users (from /api/users) -->
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(124,58,237,.1)">
+          <span class="material-icons" style="color:#7C3AED">group</span>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ totalUsers ?? '—' }}</div>
+          <div class="kpi-label">Total Users</div>
+        </div>
+      </div>
+      <!-- Pending drivers -->
+      <div class="kpi-card" [class.kpi-highlight]="pendingDrivers && pendingDrivers > 0">
+        <div class="kpi-icon" style="background:rgba(217,119,6,.1)">
+          <span class="material-icons" style="color:#D97706">hourglass_top</span>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ pendingDrivers ?? '—' }}</div>
+          <div class="kpi-label">
+            Pending Drivers
+            <a *ngIf="pendingDrivers && pendingDrivers > 0" routerLink="/admin/pending-drivers" class="kpi-action-link">Review →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #kpiSkel>
+      <div class="kpi-grid">
+        <div *ngFor="let i of [1,2,3,4,5,6,7]" class="kpi-card">
+          <div class="skeleton" style="width:44px;height:44px;border-radius:12px;flex-shrink:0"></div>
+          <div style="flex:1">
+            <div class="skeleton w-16" style="height:24px;margin-bottom:6px"></div>
+            <div class="skeleton w-28" style="height:14px"></div>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </ng-container>
+
+  <!-- Charts row -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-header">
+        <span class="chart-title">Shipments — last 7 days</span>
+        <a routerLink="/admin/charts" class="chart-link">Full analytics →</a>
+      </div>
+      <ng-container *ngIf="!chartLoading; else chartSkel">
+        <div *ngIf="chartError" class="chart-error">
+          {{ chartError }}
+          <button class="btn btn-ghost btn-xs" (click)="loadCharts()">Retry</button>
+        </div>
+        <div *ngIf="!chartError" class="chart-body">
+          <canvas baseChart [type]="'bar'" [data]="shipmentChartData" [options]="chartOptions" style="height:200px"></canvas>
+        </div>
+      </ng-container>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <span class="chart-title">Revenue — last 7 days (€)</span>
+      </div>
+      <ng-container *ngIf="!chartLoading; else chartSkel">
+        <div *ngIf="chartError" class="chart-error">{{ chartError }}</div>
+        <div *ngIf="!chartError" class="chart-body">
+          <canvas baseChart [type]="'line'" [data]="revenueChartData" [options]="lineChartOptions" style="height:200px"></canvas>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+  <ng-template #chartSkel>
+    <div class="skeleton" style="height:200px;border-radius:8px"></div>
+  </ng-template>
+
+  <!-- Quick actions -->
+  <div class="quick-actions">
+    <h3 class="qa-title">Quick actions</h3>
+    <div class="qa-grid">
+      <a routerLink="/admin/live-shipments" class="qa-card">
+        <span class="material-icons qa-icon">map</span>
+        <span>Live Map</span>
+      </a>
+      <a routerLink="/admin/pending-drivers" class="qa-card">
+        <span class="material-icons qa-icon">hourglass_top</span>
+        <span>Pending Drivers</span>
+        <span *ngIf="pendingDrivers && pendingDrivers > 0" class="qa-badge">{{ pendingDrivers }}</span>
+      </a>
+      <a routerLink="/admin/drivers" class="qa-card">
+        <span class="material-icons qa-icon">directions_car</span>
+        <span>All Drivers</span>
+      </a>
+      <a routerLink="/admin/shipments" class="qa-card">
+        <span class="material-icons qa-icon">local_shipping</span>
+        <span>Shipments</span>
+      </a>
+      <a routerLink="/admin/users" class="qa-card">
+        <span class="material-icons qa-icon">group</span>
+        <span>Users</span>
+      </a>
+      <a routerLink="/admin/charts" class="qa-card">
+        <span class="material-icons qa-icon">bar_chart</span>
+        <span>Analytics</span>
+      </a>
+    </div>
+  </div>
+</div>

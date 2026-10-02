@@ -1,0 +1,104 @@
+<div class="admin-layout" [class.sidebar-collapsed]="!sidebarOpen" (click)="closeDropdowns()">
+
+  <!-- ── SIDEBAR ─────────────────────────────────────────── -->
+  <aside class="admin-sidebar" (click)="$event.stopPropagation()">
+    <div class="sidebar-logo">
+      <span class="sidebar-logo-icon">
+        <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="7" fill="#C41E3A"/>
+          <path d="M4 18V12l6-4h8l6 4v6H4Z" fill="#fff" opacity=".9"/>
+          <circle cx="9"  cy="19" r="2.5" fill="#fff"/>
+          <circle cx="19" cy="19" r="2.5" fill="#fff"/>
+        </svg>
+      </span>
+      <span class="sidebar-logo-text">VAN DIRECT</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="sidebar-section-label">Main</span>
+      <a *ngFor="let item of navItems"
+         [routerLink]="item.route"
+         routerLinkActive="active"
+         class="sidebar-link"
+         [title]="item.label">
+        <span class="material-icons sidebar-link-icon">{{ item.icon }}</span>
+        <span class="sidebar-link-label">{{ item.label }}</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="sidebar-link theme-toggle" (click)="toggleDarkMode()">
+        <span class="material-icons sidebar-link-icon">{{ darkMode ? 'light_mode' : 'dark_mode' }}</span>
+        <span class="sidebar-link-label">{{ darkMode ? 'Light mode' : 'Dark mode' }}</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN AREA ────────────────────────────────────────── -->
+  <div class="admin-main">
+
+    <!-- TOP HEADER -->
+    <header class="admin-header" (click)="$event.stopPropagation()">
+      <button class="icon-btn" (click)="toggleSidebar()" aria-label="Toggle sidebar">
+        <span class="material-icons">menu</span>
+      </button>
+
+      <h1 class="admin-header-title">Admin Portal</h1>
+
+      <div class="header-right">
+        <!-- Notifications -->
+        <div class="header-dropdown-wrap">
+          <button class="icon-btn notif-btn" (click)="toggleNotif()" aria-label="Notifications">
+            <span class="material-icons">notifications</span>
+            <span *ngIf="unreadCount() > 0" class="badge-dot">{{ unreadCount() }}</span>
+          </button>
+          <div class="dropdown-panel notif-panel" *ngIf="notifOpen">
+            <div class="dropdown-header">
+              <span>Notifications</span>
+              <button class="text-btn" (click)="markAllRead()">Mark all read</button>
+            </div>
+            <div class="dropdown-empty" *ngIf="notifications().length === 0">No notifications</div>
+            <div class="notif-list">
+              <button
+                *ngFor="let n of notifications()"
+                class="notif-item"
+                [class.unread]="!n.readFlag"
+                (click)="markRead(n, $event)">
+                <span class="material-icons notif-icon"
+                      [style.color]="n.readFlag ? 'var(--text-muted)' : 'var(--brand)'">
+                  {{ n.readFlag ? 'notifications_none' : 'notifications_active' }}
+                </span>
+                <div class="notif-body">
+                  <span class="notif-title">{{ n.title }}</span>
+                  <span class="notif-msg">{{ n.message }}</span>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- User menu -->
+        <div class="header-dropdown-wrap">
+          <button class="user-btn" (click)="toggleUserMenu()">
+            <span class="user-avatar">{{ displayName().charAt(0).toUpperCase() }}</span>
+            <span class="user-name">{{ displayName() }}</span>
+            <span class="material-icons">arrow_drop_down</span>
+          </button>
+          <div class="dropdown-panel user-panel" *ngIf="userMenuOpen">
+            <div class="dropdown-header no-border">
+              <span class="user-role-label">ADMIN</span>
+            </div>
+            <button class="dropdown-item" (click)="logout()">
+              <span class="material-icons">logout</span> Sign out
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <main class="admin-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

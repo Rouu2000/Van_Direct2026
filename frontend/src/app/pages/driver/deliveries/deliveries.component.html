@@ -1,113 +1,132 @@
-<div class="deliveries-container">
-  <div class="header">
-    <h2>My Deliveries</h2>
-    <p>Accept assigned shipments, update delivery progress, and stream live location.</p>
-  </div>
+<div class="drv-page">
 
-  <div class="availability-panel">
-    <label class="switch">
-      <input
-        type="checkbox"
-        [checked]="availability === 'AVAILABLE'"
-        (change)="setAvailability($any($event.target).checked)"
-      />
-      <span class="slider"></span>
+  <!-- Availability card -->
+  <div class="avail-card" [class.online]="availability === 'AVAILABLE'" [class.on-delivery]="isOnDelivery">
+    <div class="avail-left">
+      <div class="avail-status-dot"></div>
+      <div class="avail-text">
+        <span class="avail-title" *ngIf="!isOnDelivery">{{ availability === 'AVAILABLE' ? 'Online — ready for deliveries' : 'Offline' }}</span>
+        <span class="avail-title" *ngIf="isOnDelivery">🚚 On delivery</span>
+        <span class="avail-sub" *ngIf="!isOnDelivery && availability !== 'AVAILABLE'">Toggle to accept new deliveries</span>
+        <span class="avail-sub" *ngIf="isOnDelivery">Complete or decline the current delivery to change status</span>
+      </div>
+    </div>
+    <label class="toggle-switch" [class.disabled]="isOnDelivery">
+      <input type="checkbox" [checked]="availability === 'AVAILABLE'" [disabled]="isOnDelivery"
+             (change)="setAvailability($any($event.target).checked)">
+      <span class="toggle-track">
+        <span class="toggle-thumb"></span>
+      </span>
     </label>
-    <span>{{ availability === 'AVAILABLE' ? 'Online and available' : 'Offline' }}</span>
   </div>
 
-  <div *ngIf="loading" class="loading-state">
-    <p>Loading deliveries...</p>
+  <!-- Loading -->
+  <div *ngIf="loading" class="drv-loading">
+    <div class="skeleton" style="height:120px;border-radius:var(--radius-lg)"></div>
+    <div class="skeleton" style="height:80px;border-radius:var(--radius-lg)"></div>
   </div>
 
-  <div *ngIf="error" class="error-alert">{{ error }}</div>
+  <div *ngIf="error" class="drv-error">{{ error }}</div>
 
-  <div *ngIf="!loading && !error && deliveries.length === 0" class="loading-state">
-    <p>No deliveries assigned yet.</p>
+  <!-- Empty state -->
+  <div *ngIf="!loading && !error && deliveries.length === 0" class="drv-empty">
+    <span class="material-icons" style="font-size:52px;color:var(--border-strong)">local_shipping</span>
+    <h3>No deliveries assigned yet</h3>
+    <p>Go online to start receiving delivery offers.</p>
   </div>
 
-  <div *ngIf="!loading && deliveries.length > 0" class="deliveries-table-card">
-    <table class="deliveries-table">
-      <thead>
-        <tr>
-          <th>Tracking #</th>
-          <th>Route</th>
-          <th>Tier / Price</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let delivery of deliveries">
-          <td class="tracking-code">
-            <strong>{{ delivery.trackingNumber }}</strong>
-          </td>
-          <td>
-            <strong>Pickup</strong><br />
-            <span class="sub-text">{{ delivery.pickupAddress }}</span><br />
-            <strong>Drop-off</strong><br />
-            <span class="sub-text">{{ delivery.dropoffAddress }}</span><br />
-            <span class="sub-text">{{ delivery.recipientName }} - {{ delivery.recipientPhone }}</span>
-          </td>
-          <td>
-            {{ delivery.serviceTier }}<br />
-            <strong>EUR {{ delivery.priceAmount | number:'1.2-2' }}</strong>
-          </td>
-          <td>
-            <span class="badge" [ngClass]="getStatusBadgeClass(delivery.status)">
-              {{ delivery.status }}
-            </span>
-          </td>
-          <td>
-            <div class="action-group">
-              <button
-                *ngIf="delivery.status === 'DRIVER_ASSIGNED'"
-                (click)="accept(delivery.id)"
-                [disabled]="updatingId === delivery.id"
-                class="btn-update"
-              >
-                {{ updatingId === delivery.id ? 'Accepting...' : 'Accept' }}
-              </button>
-              <button
-                *ngIf="delivery.status === 'DRIVER_ASSIGNED'"
-                (click)="updateStatus(delivery.id, 'PICKED_UP')"
-                [disabled]="updatingId === delivery.id"
-                class="btn-details"
-              >
-                Mark Picked Up
-              </button>
-              <button
-                *ngIf="delivery.status === 'DRIVER_ASSIGNED'"
-                (click)="decline(delivery.id)"
-                [disabled]="updatingId === delivery.id"
-                class="btn-decline"
-              >
-                Decline
-              </button>
-              <button
-                *ngIf="delivery.status === 'PICKED_UP'"
-                (click)="updateStatus(delivery.id, 'DELIVERED')"
-                [disabled]="updatingId === delivery.id"
-                class="btn-update"
-              >
-                Mark Delivered
-              </button>
-              <button (click)="openDetails(delivery)" class="btn-details">Details</button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- Delivery cards -->
+  <div *ngIf="!loading && deliveries.length > 0" class="drv-cards">
+    <div *ngFor="let d of deliveries" class="drv-card" [class.active-delivery]="d.status === 'PICKED_UP'">
+
+      <div class="drv-card-header">
+        <div class="drv-card-left">
+          <span class="tracking-code">{{ d.trackingNumber }}</span>
+          <span class="status-chip" [attr.data-status]="d.status" style="margin-left:8px">{{ d.status }}</span>
+        </div>
+        <div class="drv-price">€{{ d.priceAmount | number:'1.2-2' }} · {{ d.serviceTier }}</div>
+      </div>
+
+      <!-- Route visual -->
+      <div class="drv-route">
+        <div class="drv-route-point">
+          <span class="drv-point-dot pickup-dot"></span>
+          <div class="drv-point-info">
+            <span class="drv-point-label">Pickup</span>
+            <span class="drv-point-addr">{{ d.pickupAddress }}</span>
+          </div>
+        </div>
+        <div class="drv-route-dashes"></div>
+        <div class="drv-route-point">
+          <span class="drv-point-dot dropoff-dot"></span>
+          <div class="drv-point-info">
+            <span class="drv-point-label">Recipient · {{ d.recipientName }}</span>
+            <span class="drv-point-addr">{{ d.dropoffAddress }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRIMARY action button (one big button per status) -->
+      <div class="drv-actions">
+        <ng-container [ngSwitch]="d.status">
+
+          <ng-container *ngSwitchCase="'DRIVER_ASSIGNED'">
+            <button class="drv-primary-btn accept-btn"
+                    [disabled]="updatingId === d.id"
+                    (click)="accept(d.id)">
+              <span class="material-icons">check_circle</span>
+              {{ updatingId === d.id ? 'Accepting…' : 'Accept delivery' }}
+            </button>
+            <button class="drv-secondary-btn" (click)="decline(d.id)" [disabled]="updatingId === d.id">
+              Decline
+            </button>
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'PICKED_UP'">
+            <!-- After accept but before PICKED_UP: show PICKED_UP isn't needed, status IS picked_up, show deliver -->
+            <button class="drv-primary-btn deliver-btn"
+                    [disabled]="updatingId === d.id"
+                    (click)="updateStatus(d.id, 'DELIVERED')">
+              <span class="material-icons">flag</span>
+              {{ updatingId === d.id ? 'Delivering…' : 'Mark Delivered' }}
+            </button>
+          </ng-container>
+
+        </ng-container>
+
+        <!-- After accept (DRIVER_ASSIGNED + no offer expiry shown by Accept button becoming inactive) -->
+        <!-- Mark Picked Up only available after Accept is done -->
+        <button *ngIf="d.status === 'DRIVER_ASSIGNED' && !d.offerExpiresAt"
+                class="drv-primary-btn pickup-btn"
+                [disabled]="updatingId === d.id"
+                (click)="updateStatus(d.id, 'PICKED_UP')">
+          <span class="material-icons">inventory_2</span>
+          {{ updatingId === d.id ? 'Updating…' : 'Mark Picked Up' }}
+        </button>
+
+        <button class="drv-detail-btn" (click)="openDetails(d)">Details</button>
+      </div>
+    </div>
   </div>
 
-  <div *ngIf="selectedDelivery" class="modal-backdrop" (click)="closeDetails()">
-    <div class="modal" (click)="$event.stopPropagation()">
-      <h3>{{ selectedDelivery.trackingNumber }}</h3>
-      <p><strong>Pickup:</strong> {{ selectedDelivery.pickupAddress }}</p>
-      <p><strong>Drop-off:</strong> {{ selectedDelivery.dropoffAddress }}</p>
-      <p><strong>Recipient:</strong> {{ selectedDelivery.recipientName }} ({{ selectedDelivery.recipientPhone }})</p>
-      <p><strong>Status:</strong> {{ selectedDelivery.status }}</p>
-      <button class="btn-update" (click)="closeDetails()">Close</button>
+  <!-- Detail modal -->
+  <div *ngIf="selectedDelivery" class="modal-overlay" (click)="closeDetails()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <span class="tracking-code">{{ selectedDelivery.trackingNumber }}</span>
+        <button class="icon-close" (click)="closeDetails()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-row"><strong>Pickup:</strong> {{ selectedDelivery.pickupAddress }}</div>
+        <div class="modal-row"><strong>Drop-off:</strong> {{ selectedDelivery.dropoffAddress }}</div>
+        <div class="modal-row"><strong>Recipient:</strong> {{ selectedDelivery.recipientName }} · {{ selectedDelivery.recipientPhone }}</div>
+        <div class="modal-row"><strong>Service:</strong> {{ selectedDelivery.serviceTier }}</div>
+        <div class="modal-row"><strong>Status:</strong>
+          <span class="status-chip" [attr.data-status]="selectedDelivery.status">{{ selectedDelivery.status }}</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>

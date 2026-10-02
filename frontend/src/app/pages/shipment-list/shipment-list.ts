@@ -1,54 +1,37 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ShipmentService } from '../../services/shipment.service';
 import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-shipment-list',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterLink,
-    MatCardModule,
-    MatTableModule,
-    MatButtonModule,
-    MatSelectModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatProgressSpinnerModule
-  ],
+  imports: [CommonModule, FormsModule],
   templateUrl: './shipment-list.html',
   styleUrl: './shipment-list.css'
 })
 export class ShipmentListComponent implements OnInit {
   shipments: any[] = [];
+  filtered: any[] = [];
+  page: any[] = [];
   drivers: any[] = [];
   loading = true;
   error: string | null = null;
-  selectedDriver: Record<string, string> = {};
   busyId: string | null = null;
+  selectedDriver: Record<string, string> = {};
 
-  displayedColumns: string[] = [
-    'trackingNumber',
-    'recipientName',
-    'serviceTier',
-    'status',
-    'priceAmount',
-    'assign',
-    'actions'
-  ];
+  searchQuery = '';
+  statusFilter = '';
+  sortCol = '';
+  sortDir: 'asc' | 'desc' = 'asc';
 
-  statuses = ['BOOKED', 'DRIVER_ASSIGNED', 'PICKED_UP', 'DELIVERED', 'CANCELLED'];
+  readonly pageSize = 10;
+  currentPage = 0;
+
+  get totalPages() { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
+  get pageStart()  { return this.currentPage * this.pageSize; }
+  get pageEnd()    { return Math.min(this.pageStart + this.pageSize, this.filtered.length); }
 
   constructor(
     private shipmentService: ShipmentService,
@@ -56,76 +39,87 @@ export class ShipmentListComponent implements OnInit {
     private cdr: ChangeDetectorRef
   ) {}
 
-  ngOnInit(): void {
-    this.loadAll();
-  }
+  ngOnInit(): void { this.loadAll(); }
 
   loadAll(): void {
-    this.loading = true;
-    this.error = null;
-    this.cdr.markForCheck();
+    this.loading = true; this.error = null; this.cdr.markForCheck();
 
     this.shipmentService.getAll().subscribe({
       next: (data: any[]) => {
         this.shipments = Array.isArray(data) ? data : [];
-        this.loading = false;
-        this.cdr.markForCheck();
+        this.applyFilters();
+        this.loading = false; this.cdr.markForCheck();
       },
       error: (err) => {
-        console.error(err);
-        this.error = 'Failed to load shipments.';
-        this.loading = false;
-        this.cdr.markForCheck();
+        this.error = err.error?.message || 'Failed to load shipments.';
+        this.loading = false; this.cdr.markForCheck();
       }
     });
 
     this.userService.getAllUsers().subscribe({
       next: (users: any[]) => {
-        this.drivers = (users || []).filter(
-          (u) => u.role === 'DRIVER' && u.status === 'ACTIVE'
-        );
+        this.drivers = (users || []).filter(u => u.role === 'DRIVER' && u.status === 'ACTIVE');
         this.cdr.markForCheck();
       },
       error: () => {}
     });
   }
 
+  applyFilters(): void {
+    const q = this.searchQuery.toLowerCase().trim();
+    this.filtered = this.shipments.filter(s => {
+      const matchStatus = !this.statusFilter || s.status === this.statusFilter;
+      const matchSearch = !q || [s.trackingNumber, s.recipientName, s.pickupAddress, s.dropoffAddress]
+        .some(v => v?.toLowerCase().includes(q));
+      return matchStatus && matchSearch;
+    });
+    if (this.sortCol) {
+      this.filtered.sort((a, b) => {
+        const va = a[this.sortCol] ?? '';
+        const vb = b[this.sortCol] ?? '';
+        const cmp = String(va).localeCompare(String(vb), undefined, { numeric: true });
+        return this.sortDir === 'asc' ? cmp : -cmp;
+      });
+    }
+    this.currentPage = 0;
+    this.refreshPage();
+  }
+
+  setFilter(s: string): void { this.statusFilter = s; this.applyFilters(); }
+
+  sort(col: string): void {
+    if (this.sortCol === col) { this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc'; }
+    else { this.sortCol = col; this.sortDir = 'asc'; }
+    this.applyFilters();
+  }
+
+  getSortIcon(col: string): string {
+    if (this.sortCol !== col) return '↕';
+    return this.sortDir === 'asc' ? '↑' : '↓';
+  }
+
+  refreshPage(): void {
+    this.page = this.filtered.slice(this.pageStart, this.pageEnd);
+  }
+
+  prevPage(): void { if (this.currentPage > 0) { this.currentPage--; this.refreshPage(); } }
+  nextPage(): void { if (this.currentPage < this.totalPages - 1) { this.currentPage++; this.refreshPage(); } }
+
   assignDriver(shipmentId: string): void {
     const driverId = this.selectedDriver[shipmentId];
-    if (!driverId) {
-      alert('Select a driver first.');
-      return;
-    }
-    this.busyId = shipmentId;
-    this.cdr.markForCheck();
-
+    if (!driverId) return;
+    this.busyId = shipmentId; this.cdr.markForCheck();
     this.shipmentService.assignDriver(shipmentId, driverId).subscribe({
-      next: () => {
-        this.busyId = null;
-        this.loadAll();
-      },
-      error: (err) => {
-        this.busyId = null;
-        alert(err.error?.message || 'Failed to assign driver.');
-        this.cdr.markForCheck();
-      }
+      next: () => { this.busyId = null; this.loadAll(); },
+      error: (err) => { this.busyId = null; alert(err.error?.message || 'Failed to assign driver.'); this.cdr.markForCheck(); }
     });
   }
 
   updateStatus(shipmentId: string, status: string): void {
-    this.busyId = shipmentId;
-    this.cdr.markForCheck();
-
+    this.busyId = shipmentId; this.cdr.markForCheck();
     this.shipmentService.updateStatus(shipmentId, status).subscribe({
-      next: () => {
-        this.busyId = null;
-        this.loadAll();
-      },
-      error: (err) => {
-        this.busyId = null;
-        alert(err.error?.message || 'Failed to update status.');
-        this.cdr.markForCheck();
-      }
+      next: () => { this.busyId = null; this.loadAll(); },
+      error: (err) => { this.busyId = null; alert(err.error?.message || 'Failed to update status.'); this.cdr.markForCheck(); }
     });
   }
 }

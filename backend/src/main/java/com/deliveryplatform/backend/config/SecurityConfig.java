@@ -43,6 +43,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/shipments/track/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/shipments/estimate").permitAll()
                         .requestMatchers("/ws", "/ws/**", "/ws-sockjs", "/ws-sockjs/**").permitAll()
                         .anyRequest().authenticated()
                 )

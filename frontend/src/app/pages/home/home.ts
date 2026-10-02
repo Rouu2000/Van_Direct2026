@@ -1,121 +1,46 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatTableModule } from '@angular/material/table';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { UserService } from '../../services/user.service';
-import { ShipmentService } from '../../services/shipment.service';
-import { ParcelService } from '../../services/parcel.service';
 import { AuthService } from '../../services/auth.service';
-import { AdminService, AdminStatsSummary } from '../../services/admin.service';
+import { HeroTabsComponent } from './components/hero-tabs.component';
+import { QuickActionsComponent } from './components/quick-actions.component';
+import { ImageSectionComponent } from './components/image-section.component';
+import { ServiceCardsComponent } from './components/service-cards.component';
+import { DriveBandComponent } from './components/drive-band.component';
+import { ImageCardsComponent } from './components/image-cards.component';
+import { TrustStripComponent } from './components/trust-strip.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [
-    CommonModule,
-    RouterLink,
-    MatCardModule,
-    MatButtonModule,
-    MatTableModule,
-    MatIconModule,
-    MatProgressSpinnerModule
+    CommonModule, RouterLink,
+    HeroTabsComponent, QuickActionsComponent,
+    ImageSectionComponent, ServiceCardsComponent,
+    DriveBandComponent, ImageCardsComponent, TrustStripComponent
   ],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
 export class HomeComponent implements OnInit {
-  users: any[] = [];
-  shipmentsCount: number = 0;
-  parcelsCount: number = 0;
-  loading = true;
-  displayedColumns: string[] = ['name', 'email', 'phone', 'role', 'status'];
+  readonly isLoggedIn  = computed(() => this.auth.loggedIn());
+  readonly isCustomer  = computed(() => this.auth.customer());
 
-  // Admin KPI cards
-  adminStats: AdminStatsSummary | null = null;
-
-  constructor(
-    private userService: UserService,
-    private shipmentService: ShipmentService,
-    private parcelService: ParcelService,
-    public authService: AuthService,
-    private adminService: AdminService,
-    private cdr: ChangeDetectorRef
-  ) {}
+  constructor(public auth: AuthService) {}
 
   ngOnInit(): void {
-    this.authService.hydrateFromStorage();
-    if (this.authService.isAdmin()) {
-      this.loadAdminStats();
-    } else {
-      this.loadStats();
-    }
+    this.auth.hydrateFromStorage();
+    // NOTE: per Stage B spec, logged-in users still see the home page.
+    // They are NOT redirected — the header shows in logged-in mode instead.
   }
 
-  loadAdminStats(): void {
-    this.loading = true;
-    this.adminService.getStatsSummary().subscribe({
-      next: (stats) => {
-        this.adminStats = stats;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err: any) => {
-        console.error('Error fetching admin stats:', err);
-        this.loading = false;
-        this.cdr.markForCheck();
-      }
-    });
+  get heroShipRoute(): string {
+    if (!this.auth.isLoggedIn()) return '/register';
+    if (this.auth.isCustomer())  return '/customer/dashboard';
+    return '/';
   }
 
-  loadStats(): void {
-    this.loading = true;
-    let pending = 3;
-    const done = () => {
-      pending -= 1;
-      if (pending <= 0) {
-        this.loading = false;
-        this.cdr.markForCheck();
-      }
-    };
-
-    this.userService.getAllUsers().subscribe({
-      next: (data: any[]) => {
-        this.users = Array.isArray(data) ? data : [];
-        this.cdr.markForCheck();
-        done();
-      },
-      error: (err: any) => {
-        console.error('Error fetching users:', err);
-        done();
-      }
-    });
-
-    this.shipmentService.getAll().subscribe({
-      next: (data: any[]) => {
-        this.shipmentsCount = Array.isArray(data) ? data.length : 0;
-        this.cdr.markForCheck();
-        done();
-      },
-      error: (err: any) => {
-        console.error('Error fetching shipments:', err);
-        done();
-      }
-    });
-
-    this.parcelService.getAll().subscribe({
-      next: (data: any[]) => {
-        this.parcelsCount = Array.isArray(data) ? data.length : 0;
-        this.cdr.markForCheck();
-        done();
-      },
-      error: (err: any) => {
-        console.error('Error fetching parcels:', err);
-        done();
-      }
-    });
+  get heroShipLabel(): string {
+    return this.auth.isCustomer() ? 'My shipments' : 'Ship a parcel';
   }
 }

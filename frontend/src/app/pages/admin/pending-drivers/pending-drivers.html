@@ -1,78 +1,72 @@
-<div class="page-shell">
-  <div class="page-header">
+<div class="dt-page">
+  <div class="dt-header">
     <div>
-      <h2>Pending Driver Applications</h2>
-      <p>Review and manage driver signups awaiting approval.</p>
+      <h2 class="dt-title">Pending Driver Applications</h2>
+      <p class="dt-sub">{{ drivers.length }} application{{ drivers.length === 1 ? '' : 's' }} awaiting review</p>
     </div>
-    <a mat-stroked-button routerLink="/admin/dashboard" color="primary">
-      <mat-icon>home</mat-icon>
-      Dashboard
-    </a>
+    <button class="btn btn-primary btn-sm" (click)="loadDrivers()">
+      <span class="material-icons" style="font-size:16px">refresh</span> Refresh
+    </button>
   </div>
 
-  <mat-card class="panel-card">
-    <mat-card-content>
-      <div *ngIf="loading" class="state-block">
-        <mat-spinner diameter="40"></mat-spinner>
-        <p>Loading pending drivers...</p>
+  <div class="dt-card">
+    <div *ngIf="loading" class="dt-skeleton-rows">
+      <div *ngFor="let i of [1,2,3]" class="skeleton-row">
+        <div class="skeleton w-28"></div><div class="skeleton w-40"></div>
+        <div class="skeleton w-24"></div><div class="skeleton w-32"></div>
       </div>
+    </div>
 
-      <div *ngIf="error && !loading" class="error-block">
-        <mat-icon color="warn">error</mat-icon>
-        <p>{{ error }}</p>
-        <button mat-stroked-button color="primary" (click)="loadDrivers()">Retry</button>
-      </div>
+    <div *ngIf="error && !loading" class="dt-empty">
+      <span class="material-icons dt-empty-icon" style="color:var(--danger)">error_outline</span>
+      <p>{{ error }}</p>
+      <button class="btn btn-outline btn-sm" (click)="loadDrivers()">Retry</button>
+    </div>
 
-      <div *ngIf="!loading && !error && drivers.length === 0" class="state-block">
-        <mat-icon class="empty-icon">hourglass_empty</mat-icon>
-        <p>No pending applications.</p>
-      </div>
+    <div *ngIf="!loading && !error && drivers.length === 0" class="dt-empty">
+      <span class="material-icons dt-empty-icon">hourglass_empty</span>
+      <p>No pending applications</p>
+    </div>
 
-      <div *ngIf="!loading && drivers.length > 0" class="table-wrap">
-        <table mat-table [dataSource]="drivers" class="drivers-table">
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
-            <td mat-cell *matCellDef="let driver">{{ driver.name || '—' }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="email">
-            <th mat-header-cell *matHeaderCellDef>Email</th>
-            <td mat-cell *matCellDef="let driver">{{ driver.email || '—' }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="phone">
-            <th mat-header-cell *matHeaderCellDef>Phone</th>
-            <td mat-cell *matCellDef="let driver">{{ driver.phone || '—' }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="vehicleType">
-            <th mat-header-cell *matHeaderCellDef>Vehicle</th>
-            <td mat-cell *matCellDef="let driver">
-              <span class="chip">{{ driver.vehicleType || '—' }}</span>
+    <div *ngIf="!loading && drivers.length > 0" class="dt-scroll">
+      <table class="dt-table">
+        <thead>
+          <tr>
+            <th>Applicant</th>
+            <th>Phone</th>
+            <th>Vehicle</th>
+            <th>License</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let d of drivers">
+            <td>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="dt-avatar" style="background:var(--warning)">{{ d.name?.charAt(0)?.toUpperCase() }}</span>
+                <div>
+                  <span class="dt-primary">{{ d.name || '—' }}</span>
+                  <span class="dt-secondary">{{ d.email || '—' }}</span>
+                </div>
+              </div>
             </td>
-          </ng-container>
-
-          <ng-container matColumnDef="licenseNumber">
-            <th mat-header-cell *matHeaderCellDef>License</th>
-            <td mat-cell *matCellDef="let driver">{{ driver.licenseNumber || '—' }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let driver" class="actions-cell">
-              <button mat-flat-button color="primary" (click)="approveDriver(driver.id)">
-                Approve
-              </button>
-              <button mat-stroked-button color="warn" (click)="suspendDriver(driver.id)">
-                Suspend
-              </button>
+            <td class="dt-secondary" style="display:table-cell">{{ d.phone || '—' }}</td>
+            <td>{{ d.vehicleType || '—' }}</td>
+            <td><span class="tracking-code">{{ d.licenseNumber || '—' }}</span></td>
+            <td>
+              <div class="action-btns">
+                <button class="btn btn-primary btn-xs" (click)="approveDriver(d.id)">
+                  <span class="material-icons" style="font-size:14px">check</span> Approve
+                </button>
+                <button class="btn btn-xs" style="background:var(--danger-bg);color:var(--danger)"
+                        (click)="suspendDriver(d.id)">
+                  <span class="material-icons" style="font-size:14px">close</span> Reject
+                </button>
+              </div>
             </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
-      </div>
-    </mat-card-content>
-  </mat-card>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>

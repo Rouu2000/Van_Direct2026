@@ -1,4 +1,4 @@
-<mat-toolbar class="vd-toolbar">
+<mat-toolbar class="vd-toolbar" *ngIf="!isAdminRoute">
   <a routerLink="/" class="brand" aria-label="VAN DIRECT home">
     <span class="brand-text">VAN DIRECT</span>
   </a>
@@ -24,14 +24,6 @@
     <!-- DRIVER -->
     <ng-container *ngIf="isDriver()">
       <a mat-button routerLink="/driver/deliveries" routerLinkActive="active-link">My Deliveries</a>
-      <label class="driver-toggle">
-        <input
-          type="checkbox"
-          [checked]="driverOnline"
-          (change)="toggleDriverAvailability($any($event.target).checked)"
-        />
-        <span>{{ driverOnline ? 'Online' : 'Offline' }}</span>
-      </label>
     </ng-container>
   </nav>
 
@@ -104,6 +96,10 @@
   </ng-container>
 </mat-toolbar>
 
-<main class="main-content">
+<main class="main-content" *ngIf="!isAdminRoute">
   <ng-content></ng-content>
 </main>
+<!-- Admin routes render their own shell with sidebar; no main-content wrapper needed -->
+<ng-container *ngIf="isAdminRoute">
+  <ng-content></ng-content>
+</ng-container>

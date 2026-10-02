@@ -1,87 +1,142 @@
-<div class="page-shell">
-  <div class="page-header">
+<div class="dt-page">
+  <div class="dt-header">
     <div>
-      <h2>All Shipments</h2>
-      <p>Assign drivers and manage shipment status.</p>
+      <h2 class="dt-title">Shipments</h2>
+      <p class="dt-sub">{{ filtered.length }} of {{ shipments.length }} shipments</p>
     </div>
-    <a mat-stroked-button color="primary" routerLink="/admin/dashboard">Dashboard</a>
+    <button class="btn btn-primary btn-sm" (click)="loadAll()">
+      <span class="material-icons" style="font-size:16px">refresh</span> Refresh
+    </button>
   </div>
 
-  <mat-card class="panel">
-    <mat-card-content>
-      <div *ngIf="loading" class="state">
-        <mat-spinner diameter="40"></mat-spinner>
+  <!-- Search + filter bar -->
+  <div class="dt-toolbar">
+    <div class="dt-search">
+      <span class="material-icons dt-search-icon">search</span>
+      <input class="dt-search-input" type="text" placeholder="Search tracking, recipient, address…"
+             [(ngModel)]="searchQuery" (ngModelChange)="applyFilters()">
+      <button *ngIf="searchQuery" class="dt-clear-btn" (click)="searchQuery=''; applyFilters()">
+        <span class="material-icons" style="font-size:16px">close</span>
+      </button>
+    </div>
+    <div class="filter-chips">
+      <button class="chip" [class.active]="statusFilter === ''" (click)="setFilter('')">All</button>
+      <button class="chip chip-orange" [class.active]="statusFilter === 'BOOKED'" (click)="setFilter('BOOKED')">Booked</button>
+      <button class="chip chip-blue"   [class.active]="statusFilter === 'DRIVER_ASSIGNED'" (click)="setFilter('DRIVER_ASSIGNED')">Assigned</button>
+      <button class="chip chip-purple" [class.active]="statusFilter === 'PICKED_UP'" (click)="setFilter('PICKED_UP')">Picked Up</button>
+      <button class="chip chip-green"  [class.active]="statusFilter === 'DELIVERED'" (click)="setFilter('DELIVERED')">Delivered</button>
+      <button class="chip chip-red"    [class.active]="statusFilter === 'CANCELLED'" (click)="setFilter('CANCELLED')">Cancelled</button>
+    </div>
+  </div>
+
+  <!-- Table card -->
+  <div class="dt-card">
+    <!-- Skeleton -->
+    <div *ngIf="loading" class="dt-skeleton-rows">
+      <div *ngFor="let i of [1,2,3,4,5]" class="skeleton-row">
+        <div class="skeleton w-28"></div>
+        <div class="skeleton w-40"></div>
+        <div class="skeleton w-20"></div>
+        <div class="skeleton w-24"></div>
+        <div class="skeleton w-16"></div>
+        <div class="skeleton w-32"></div>
       </div>
+    </div>
 
-      <div *ngIf="error && !loading" class="state error">{{ error }}</div>
+    <!-- Error -->
+    <div *ngIf="error && !loading" class="dt-empty">
+      <span class="material-icons dt-empty-icon" style="color:var(--danger)">error_outline</span>
+      <p>{{ error }}</p>
+      <button class="btn btn-outline btn-sm" (click)="loadAll()">Retry</button>
+    </div>
 
-      <div *ngIf="!loading && shipments.length === 0" class="state">No shipments found.</div>
+    <!-- Empty state -->
+    <div *ngIf="!loading && !error && filtered.length === 0" class="dt-empty">
+      <span class="material-icons dt-empty-icon">local_shipping</span>
+      <p>{{ shipments.length === 0 ? 'No shipments yet' : 'No shipments match the current filter' }}</p>
+    </div>
 
-      <div *ngIf="!loading && shipments.length > 0" class="table-wrap">
-        <table mat-table [dataSource]="shipments" class="shipments-table">
-          <ng-container matColumnDef="trackingNumber">
-            <th mat-header-cell *matHeaderCellDef>Tracking #</th>
-            <td mat-cell *matCellDef="let s"><strong>{{ s.trackingNumber }}</strong></td>
-          </ng-container>
-
-          <ng-container matColumnDef="recipientName">
-            <th mat-header-cell *matHeaderCellDef>Recipient</th>
-            <td mat-cell *matCellDef="let s">
-              {{ s.recipientName }}<br>
-              <small>{{ s.dropoffAddress }}</small>
+    <!-- Table -->
+    <div *ngIf="!loading && filtered.length > 0" class="dt-scroll">
+      <table class="dt-table">
+        <thead>
+          <tr>
+            <th class="sortable" (click)="sort('trackingNumber')">
+              Tracking # <span class="sort-icon">{{ getSortIcon('trackingNumber') }}</span>
+            </th>
+            <th>Recipient</th>
+            <th class="sortable" (click)="sort('serviceTier')">
+              Tier <span class="sort-icon">{{ getSortIcon('serviceTier') }}</span>
+            </th>
+            <th class="sortable" (click)="sort('status')">
+              Status <span class="sort-icon">{{ getSortIcon('status') }}</span>
+            </th>
+            <th class="sortable" (click)="sort('priceAmount')">
+              Price <span class="sort-icon">{{ getSortIcon('priceAmount') }}</span>
+            </th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let s of page" [class.busy-row]="busyId === s.id">
+            <td>
+              <span class="tracking-code">{{ s.trackingNumber }}</span>
             </td>
-          </ng-container>
-
-          <ng-container matColumnDef="serviceTier">
-            <th mat-header-cell *matHeaderCellDef>Tier</th>
-            <td mat-cell *matCellDef="let s">{{ s.serviceTier }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let s">
-              <span class="status-chip" [attr.data-status]="s.status">{{ s.status }}</span>
+            <td>
+              <span class="dt-primary">{{ s.recipientName }}</span>
+              <span class="dt-secondary">{{ s.dropoffAddress }}</span>
             </td>
-          </ng-container>
-
-          <ng-container matColumnDef="priceAmount">
-            <th mat-header-cell *matHeaderCellDef>Price</th>
-            <td mat-cell *matCellDef="let s">€{{ s.priceAmount | number:'1.2-2' }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="assign">
-            <th mat-header-cell *matHeaderCellDef>Assign Driver</th>
-            <td mat-cell *matCellDef="let s" class="assign-cell">
-              <mat-form-field appearance="outline" class="driver-select">
-                <mat-label>Driver</mat-label>
-                <mat-select [(ngModel)]="selectedDriver[s.id]" [name]="'driver' + s.id">
-                  <mat-option *ngFor="let d of drivers" [value]="d.id">{{ d.name }}</mat-option>
-                </mat-select>
-              </mat-form-field>
-              <button
-                mat-flat-button
-                color="primary"
-                [disabled]="busyId === s.id || s.status === 'DELIVERED' || s.status === 'CANCELLED'"
-                (click)="assignDriver(s.id)"
-              >
-                Assign
-              </button>
+            <td>
+              <span class="tier-badge" [class.express]="s.serviceTier === 'EXPRESS'">{{ s.serviceTier }}</span>
             </td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Update Status</th>
-            <td mat-cell *matCellDef="let s" class="actions-cell">
-              <button mat-stroked-button (click)="updateStatus(s.id, 'PICKED_UP')" [disabled]="busyId === s.id">Picked Up</button>
-              <button mat-stroked-button (click)="updateStatus(s.id, 'DELIVERED')" [disabled]="busyId === s.id">Delivered</button>
-              <button mat-button color="warn" (click)="updateStatus(s.id, 'CANCELLED')" [disabled]="busyId === s.id">Cancel</button>
+            <td>
+              <span class="status-chip" [attr.data-status]="s.status">{{ s.status | titlecase }}</span>
             </td>
-          </ng-container>
+            <td class="dt-mono">€{{ s.priceAmount | number:'1.2-2' }}</td>
+            <td class="actions-cell">
+              <!-- Assign: only for BOOKED -->
+              <div *ngIf="s.status === 'BOOKED'" class="assign-row">
+                <select class="assign-select" [(ngModel)]="selectedDriver[s.id]">
+                  <option value="">-- driver --</option>
+                  <option *ngFor="let d of drivers" [value]="d.id">{{ d.name }}</option>
+                </select>
+                <button class="btn btn-secondary btn-xs"
+                        [disabled]="busyId === s.id || !selectedDriver[s.id]"
+                        (click)="assignDriver(s.id)">Assign</button>
+              </div>
+              <!-- Status transitions: only show valid next steps -->
+              <div class="action-btns">
+                <button *ngIf="s.status === 'DRIVER_ASSIGNED'" class="btn btn-primary btn-xs"
+                        [disabled]="busyId === s.id"
+                        (click)="updateStatus(s.id, 'PICKED_UP')">Picked Up</button>
+                <button *ngIf="s.status === 'PICKED_UP'" class="btn btn-primary btn-xs"
+                        [disabled]="busyId === s.id"
+                        (click)="updateStatus(s.id, 'DELIVERED')">Delivered</button>
+                <button *ngIf="s.status === 'BOOKED' || s.status === 'DRIVER_ASSIGNED'"
+                        class="btn btn-xs" style="background:var(--danger-bg);color:var(--danger)"
+                        [disabled]="busyId === s.id"
+                        (click)="updateStatus(s.id, 'CANCELLED')">Cancel</button>
+                <span *ngIf="s.status === 'DELIVERED'" class="delivered-mark">✓ Delivered</span>
+                <span *ngIf="s.status === 'CANCELLED'" class="cancelled-mark">✕ Cancelled</span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
+    <!-- Pagination -->
+    <div *ngIf="!loading && filtered.length > pageSize" class="dt-pagination">
+      <span class="page-info">{{ pageStart + 1 }}–{{ pageEnd }} of {{ filtered.length }}</span>
+      <div class="page-btns">
+        <button class="page-btn" [disabled]="currentPage === 0" (click)="prevPage()">
+          <span class="material-icons">chevron_left</span>
+        </button>
+        <span class="page-num">{{ currentPage + 1 }} / {{ totalPages }}</span>
+        <button class="page-btn" [disabled]="currentPage >= totalPages - 1" (click)="nextPage()">
+          <span class="material-icons">chevron_right</span>
+        </button>
       </div>
-    </mat-card-content>
-  </mat-card>
+    </div>
+  </div>
 </div>

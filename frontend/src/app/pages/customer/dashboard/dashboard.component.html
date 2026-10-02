@@ -1,117 +1,201 @@
-<div class="dashboard">
-  <mat-card class="welcome-card">
-    <mat-card-content class="welcome-content">
-      <div>
-        <h2>Welcome back, {{ userName }}!</h2>
-        <p>Manage your packages and track live deliveries with VAN DIRECT.</p>
+<div class="cust-dash">
+
+  <!-- Hero banner -->
+  <div class="cust-hero">
+    <div class="cust-hero-text">
+      <div class="cust-motto">Your parcel. Our promise.</div>
+      <h1 class="cust-hello">Welcome back, {{ userName }}!</h1>
+      <p class="cust-sub">From door to door, we treat every package like it's our own.</p>
+      <div class="cust-hero-actions">
+        <a routerLink="/customer/shipments/new" class="btn btn-primary">
+          <span class="material-icons" style="font-size:18px">add_box</span> Ship a parcel
+        </a>
       </div>
-      <a mat-flat-button class="create-btn" routerLink="/customer/shipments/new">
-        <mat-icon>add</mat-icon>
-        Create New Shipment
-      </a>
-    </mat-card-content>
-  </mat-card>
+    </div>
+    <!-- Inline SVG van illustration -->
+    <div class="cust-hero-svg" aria-hidden="true">
+      <svg viewBox="0 0 280 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect y="148" width="280" height="32" rx="4" fill="#E2E8F0"/>
+        <rect x="24" y="87" width="172" height="68" rx="9" fill="#1B3A6B"/>
+        <rect x="24" y="87" width="56" height="68" rx="9" fill="#C41E3A"/>
+        <rect x="30" y="95" width="42" height="30" rx="5" fill="#93C5FD" opacity=".8"/>
+        <rect x="104" y="97" width="34" height="22" rx="4" fill="#fff" opacity=".12"/>
+        <rect x="148" y="97" width="34" height="22" rx="4" fill="#fff" opacity=".12"/>
+        <circle cx="72"  cy="151" r="16" fill="#334155"/>
+        <circle cx="72"  cy="151" r="8"  fill="#94A3B8"/>
+        <circle cx="172" cy="151" r="16" fill="#334155"/>
+        <circle cx="172" cy="151" r="8"  fill="#94A3B8"/>
+        <rect x="88" y="63" width="68" height="26" rx="6" fill="#F59E0B"/>
+        <line x1="122" y1="63" x2="122" y2="89" stroke="#fff" stroke-width="1.5" opacity=".4"/>
+        <line x1="88"  y1="76" x2="156" y2="76" stroke="#fff" stroke-width="1.5" opacity=".4"/>
+        <line x1="205" y1="102" x2="260" y2="102" stroke="#C41E3A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="210" y1="116" x2="252" y2="116" stroke="#C41E3A" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
+        <line x1="215" y1="130" x2="244" y2="130" stroke="#C41E3A" stroke-width="2" stroke-linecap="round" opacity=".35"/>
+      </svg>
+    </div>
+  </div>
 
-  <mat-card class="section-card">
-    <mat-card-header>
-      <mat-icon mat-card-avatar>search</mat-icon>
-      <mat-card-title>Track a Shipment</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <form (ngSubmit)="onTrackSubmit()" class="track-form">
-        <mat-form-field appearance="outline" class="track-field">
-          <mat-label>Tracking Number</mat-label>
-          <input matInput [(ngModel)]="trackingQuery" name="trackingQuery" placeholder="e.g. TRK-123456" />
-        </mat-form-field>
-        <button mat-flat-button color="primary" type="submit">Track</button>
-      </form>
+  <!-- Summary cards -->
+  <div class="cust-summary">
+    <div class="cust-stat">
+      <span class="material-icons cust-stat-icon" style="color:#2563EB">local_shipping</span>
+      <div>
+        <div class="cust-stat-val">{{ activeCount }}</div>
+        <div class="cust-stat-lbl">Active</div>
+      </div>
+    </div>
+    <div class="cust-stat">
+      <span class="material-icons cust-stat-icon" style="color:#16A34A">check_circle</span>
+      <div>
+        <div class="cust-stat-val">{{ deliveredCount }}</div>
+        <div class="cust-stat-lbl">Delivered</div>
+      </div>
+    </div>
+    <div class="cust-stat">
+      <span class="material-icons cust-stat-icon" style="color:#C41E3A">inventory_2</span>
+      <div>
+        <div class="cust-stat-val">{{ shipments.length }}</div>
+        <div class="cust-stat-lbl">Total</div>
+      </div>
+    </div>
+  </div>
 
-      <div *ngIf="trackedShipment" class="track-result">
-        <h4>{{ trackedShipment.trackingNumber }} — {{ trackedShipment.status }}</h4>
-        <div class="result-grid">
-          <div><strong>Recipient:</strong> {{ trackedShipment.recipientName }}</div>
-          <div><strong>Drop-off:</strong> {{ trackedShipment.dropoffAddress }}</div>
-          <div><strong>Service:</strong> {{ trackedShipment.serviceTier }}</div>
-          <div><strong>Price:</strong> €{{ trackedShipment.priceAmount | number:'1.2-2' }}</div>
+  <!-- Quick track box -->
+  <div class="cust-track-card">
+    <span class="material-icons" style="color:var(--brand)">search</span>
+    <input class="cust-track-input" type="text" placeholder="Enter tracking number…"
+           [(ngModel)]="trackingQuery" (keyup.enter)="onTrackSubmit()">
+    <button class="btn btn-primary btn-sm" (click)="onTrackSubmit()">Track</button>
+  </div>
+
+  <!-- Inline track result -->
+  <div *ngIf="trackedShipment" class="track-result-card">
+    <div class="track-result-header">
+      <span class="tracking-code">{{ trackedShipment.trackingNumber }}</span>
+      <span class="status-chip" [attr.data-status]="trackedShipment.status">{{ trackedShipment.status }}</span>
+    </div>
+    <div *ngIf="trackedDriver && (trackedShipment.status==='DRIVER_ASSIGNED' || trackedShipment.status==='PICKED_UP')"
+         class="driver-banner">
+      <span class="material-icons">directions_car</span>
+      <span *ngIf="trackedShipment.status==='DRIVER_ASSIGNED'">
+        <strong>{{ trackedDriver.firstName }}</strong> is heading to pick up your parcel
+        <span *ngIf="trackedDriver.vehicleType"> · {{ trackedDriver.vehicleType }}</span>
+      </span>
+      <span *ngIf="trackedShipment.status==='PICKED_UP'">
+        <strong>{{ trackedDriver.firstName }}</strong> has your parcel and is on the way
+        <span *ngIf="trackedDriver.vehicleType"> · {{ trackedDriver.vehicleType }}</span>
+      </span>
+    </div>
+    <div class="track-result-grid">
+      <div><strong>Recipient:</strong> {{ trackedShipment.recipientName }}</div>
+      <div><strong>Drop-off:</strong> {{ trackedShipment.dropoffAddress }}</div>
+      <div><strong>Service:</strong> {{ trackedShipment.serviceTier }}</div>
+      <div><strong>Price:</strong> €{{ trackedShipment.priceAmount | number:'1.2-2' }}</div>
+    </div>
+  </div>
+  <div *ngIf="trackError" class="track-error">{{ trackError }}</div>
+
+  <!-- Shipments section -->
+  <div class="cust-section-header">
+    <h2 class="cust-section-title">My Shipments</h2>
+    <a routerLink="/customer/shipments/new" class="btn btn-outline btn-sm">+ New shipment</a>
+  </div>
+
+  <div *ngIf="loading" class="cust-skeleton">
+    <div *ngFor="let i of [1,2,3]" class="shipment-card-skeleton">
+      <div class="skeleton w-28" style="height:18px"></div>
+      <div class="skeleton w-40" style="height:14px;margin-top:6px"></div>
+    </div>
+  </div>
+
+  <div *ngIf="error && !loading" class="cust-error">
+    {{ error }}
+    <button class="btn btn-ghost btn-sm" (click)="loadShipments()">Retry</button>
+  </div>
+
+  <div *ngIf="!loading && !error && shipments.length === 0" class="cust-empty">
+    <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+      <rect width="80" height="80" rx="20" fill="#F1F5F9"/>
+      <path d="M20 52V32l14-10h12l14 10v20H20Z" fill="#CBD5E1"/>
+      <rect x="32" y="40" width="16" height="12" rx="2" fill="#94A3B8"/>
+      <circle cx="30" cy="55" r="5" fill="#94A3B8"/>
+      <circle cx="50" cy="55" r="5" fill="#94A3B8"/>
+    </svg>
+    <h3>No shipments yet</h3>
+    <p>Book your first delivery to get started.</p>
+    <a routerLink="/customer/shipments/new" class="btn btn-primary" style="margin-top:8px">Create New Shipment</a>
+  </div>
+
+  <div *ngIf="!loading && shipments.length > 0" class="shipment-cards">
+    <div *ngFor="let s of shipments" class="shipment-card">
+      <!-- Card header -->
+      <div class="sc-header">
+        <span class="tracking-code">{{ s.trackingNumber }}</span>
+        <span class="status-chip" [attr.data-status]="s.status">{{ s.status }}</span>
+      </div>
+
+      <!-- Route -->
+      <div class="sc-route">
+        <div class="sc-route-addr">
+          <span class="material-icons sc-route-icon pickup-icon">radio_button_checked</span>
+          <span class="sc-addr-text">{{ s.recipientName }}</span>
+        </div>
+        <div class="sc-route-line"></div>
+        <div class="sc-route-addr">
+          <span class="material-icons sc-route-icon dropoff-icon">location_on</span>
+          <span class="sc-addr-text">{{ s.dropoffAddress || s.recipientName }}</span>
         </div>
       </div>
-      <p *ngIf="trackError" class="error-text">{{ trackError }}</p>
-    </mat-card-content>
-  </mat-card>
 
-  <mat-card class="section-card">
-    <mat-card-header>
-      <mat-icon mat-card-avatar>local_shipping</mat-icon>
-      <mat-card-title>My Shipments</mat-card-title>
-      <mat-card-subtitle>Your booking history</mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content>
-      <div *ngIf="loading" class="state-block">
-        <mat-spinner diameter="40"></mat-spinner>
-        <p>Loading your shipments...</p>
+      <!-- Progress stepper -->
+      <div class="sc-stepper">
+        <div *ngFor="let step of steps; let i = index" class="sc-step-wrap">
+          <div class="sc-step" [class.done]="isStepDone(s.status, i)" [class.active]="isStepActive(s.status, i)">
+            <span class="sc-step-dot"></span>
+            <span class="sc-step-lbl">{{ step }}</span>
+          </div>
+          <div *ngIf="i < steps.length - 1" class="sc-step-line" [class.filled]="isStepDone(s.status, i)"></div>
+        </div>
       </div>
 
-      <div *ngIf="error && !loading" class="state-block error">
-        <p>{{ error }}</p>
-        <button mat-stroked-button color="primary" (click)="loadShipments()">Retry</button>
+      <!-- Meta row -->
+      <div class="sc-meta">
+        <span><span class="sc-meta-key">Parcels:</span> {{ s.parcelCount != null ? s.parcelCount : 1 }}</span>
+        <span><span class="sc-meta-key">Price:</span> €{{ s.priceAmount | number:'1.2-2' }}</span>
+        <span><span class="sc-meta-key">Tier:</span> {{ s.serviceTier }}</span>
       </div>
 
-      <div *ngIf="!loading && !error && shipments.length === 0" class="state-block">
-        <mat-icon class="empty-icon">inventory_2</mat-icon>
-        <h3>No shipments yet</h3>
-        <p>Book your first delivery to get started.</p>
-        <a mat-flat-button class="create-btn" routerLink="/customer/shipments/new">Create New Shipment</a>
-      </div>
-
-      <div *ngIf="!loading && shipments.length > 0" class="table-wrap">
-        <table mat-table [dataSource]="shipments" class="shipments-table">
-          <ng-container matColumnDef="trackingNumber">
-            <th mat-header-cell *matHeaderCellDef>Tracking #</th>
-            <td mat-cell *matCellDef="let s" class="tracking-cell">{{ s.trackingNumber }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="recipientName">
-            <th mat-header-cell *matHeaderCellDef>Recipient</th>
-            <td mat-cell *matCellDef="let s">{{ s.recipientName }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="parcelCount">
-            <th mat-header-cell *matHeaderCellDef>Parcels</th>
-            <td mat-cell *matCellDef="let s">{{ s.parcelCount != null ? s.parcelCount : 1 }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let s">
-              <span class="status-chip" [attr.data-status]="s.status">{{ s.status }}</span>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="priceAmount">
-            <th mat-header-cell *matHeaderCellDef>Price</th>
-            <td mat-cell *matCellDef="let s">€{{ s.priceAmount | number:'1.2-2' }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let s" class="actions-cell">
-              <a mat-stroked-button [routerLink]="['/track']" [queryParams]="{ tn: s.trackingNumber }">Track</a>
-              <button
-                mat-button
-                color="warn"
-                *ngIf="canCancel(s)"
+      <!-- Actions -->
+      <div class="sc-actions">
+        <a class="btn btn-ghost btn-xs" [routerLink]="['/track']" [queryParams]="{tn: s.trackingNumber}">
+          <span class="material-icons" style="font-size:14px">open_in_new</span> Track
+        </a>
+        <button *ngIf="canCancel(s)" class="btn btn-xs" style="background:var(--danger-bg);color:var(--danger)"
                 [disabled]="cancellingId === s.id"
-                (click)="cancelShipment(s.id)"
-              >
-                {{ cancellingId === s.id ? 'Cancelling...' : 'Cancel' }}
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
+                (click)="cancelShipment(s.id)">
+          {{ cancellingId === s.id ? 'Cancelling…' : 'Cancel' }}
+        </button>
       </div>
-    </mat-card-content>
-  </mat-card>
+    </div>
+  </div>
+
+  <!-- Why VAN DIRECT strip -->
+  <div class="why-strip">
+    <div class="why-item">
+      <span class="material-icons why-icon">gps_fixed</span>
+      <span>Live GPS tracking</span>
+    </div>
+    <div class="why-item">
+      <span class="material-icons why-icon">inventory_2</span>
+      <span>Multiple parcels per booking</span>
+    </div>
+    <div class="why-item">
+      <span class="material-icons why-icon">notifications</span>
+      <span>Instant status updates</span>
+    </div>
+    <div class="why-item">
+      <span class="material-icons why-icon">verified</span>
+      <span>Vetted drivers</span>
+    </div>
+  </div>
 </div>

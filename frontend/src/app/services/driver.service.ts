@@ -14,6 +14,10 @@ export class DriverService {
     return this.http.put(`${this.driversUrl}/${driverId}/availability`, { status });
   }
 
+  getStatus(driverId: string): Observable<any> {
+    return this.http.get(`${this.driversUrl}/${driverId}/status`);
+  }
+
   getDeliveries(driverId: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.driversUrl}/${driverId}/deliveries`);
   }

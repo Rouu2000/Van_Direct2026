@@ -1,61 +1,77 @@
-<div class="live-shipments-container">
-  <div class="header-section">
-    <h2>Live Shipments</h2>
-    <div class="legend">
-      <div class="legend-item">
-        <span class="legend-icon pickup">📦</span>
-        <span>Pickup</span>
-      </div>
-      <div class="legend-item">
-        <span class="legend-icon dropoff">🏁</span>
-        <span>Dropoff</span>
-      </div>
-      <div class="legend-item">
-        <span class="legend-icon driver">🚚</span>
-        <span>Driver</span>
-      </div>
+<div class="ls-page">
+  <div class="ls-header">
+    <div>
+      <h2 class="dt-title">Live Shipments</h2>
+      <p class="dt-sub">{{ filteredShipments.length }} active · auto-refreshes every 5 s</p>
+    </div>
+    <div class="ls-header-actions">
+      <button class="btn btn-ghost btn-sm" (click)="resetView()">
+        <span class="material-icons" style="font-size:16px">my_location</span> Reset view
+      </button>
+      <button class="btn btn-ghost btn-sm" (click)="fitAll()">
+        <span class="material-icons" style="font-size:16px">fit_screen</span> Fit all
+      </button>
     </div>
   </div>
 
-  <div *ngIf="loading" class="loading-container">
-    <mat-spinner diameter="48"></mat-spinner>
+  <!-- Status filter -->
+  <div class="filter-chips" style="margin-bottom:16px">
+    <button class="chip" [class.active]="statusFilter==='ALL'"              (click)="setStatusFilter('ALL')">All</button>
+    <button class="chip chip-orange" [class.active]="statusFilter==='BOOKED'"           (click)="setStatusFilter('BOOKED')">Booked</button>
+    <button class="chip chip-blue"   [class.active]="statusFilter==='DRIVER_ASSIGNED'"  (click)="setStatusFilter('DRIVER_ASSIGNED')">Assigned</button>
+    <button class="chip chip-green"  [class.active]="statusFilter==='PICKED_UP'"        (click)="setStatusFilter('PICKED_UP')">Picked Up</button>
   </div>
 
-  <div *ngIf="!loading" class="content-grid">
-    <mat-card class="map-card">
-      <mat-card-content>
-        <div id="live-shipments-map" class="map-container"></div>
-      </mat-card-content>
-    </mat-card>
+  <div class="ls-grid">
+    <!-- Map — always in DOM -->
+    <div class="ls-map-card">
+      <div id="live-shipments-map" class="ls-map"></div>
+      <div *ngIf="loading" class="ls-map-overlay">
+        <mat-spinner diameter="36"></mat-spinner>
+        <span>Loading map…</span>
+      </div>
+      <!-- Legend -->
+      <div class="map-legend">
+        <div class="leg-item"><span class="leg-dot" style="background:#D97706"></span>Booked</div>
+        <div class="leg-item"><span class="leg-dot" style="background:#2563EB"></span>Assigned</div>
+        <div class="leg-item"><span class="leg-dot" style="background:#16A34A"></span>Picked Up</div>
+        <div class="leg-item">📦 Pickup &nbsp; 🏁 Dropoff &nbsp; 🚚 Driver</div>
+      </div>
+    </div>
 
-    <mat-card class="list-card">
-      <mat-card-header>
-        <mat-card-title>Active Shipments ({{ shipments.length }})</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div *ngIf="shipments.length === 0" class="empty-state">
-          <mat-icon>local_shipping</mat-icon>
-          <p>No active shipments</p>
-        </div>
-        <div *ngFor="let shipment of shipments" class="shipment-item">
-          <div class="shipment-header">
-            <span class="tracking-number">{{ shipment.trackingNumber }}</span>
-            <span class="status-badge" [style.background-color]="getStatusColor(shipment.status)">
-              {{ shipment.status }}
+    <!-- List -->
+    <div class="ls-list-card">
+      <div class="ls-list-header">Active Shipments ({{ filteredShipments.length }})</div>
+
+      <div *ngIf="filteredShipments.length === 0" class="ls-list-empty">
+        <span class="material-icons" style="font-size:40px;opacity:.3">local_shipping</span>
+        <p>No active shipments</p>
+      </div>
+
+      <div class="ls-list-items">
+        <div *ngFor="let s of filteredShipments"
+             class="ls-item"
+             [class.selected]="selectedId === s.id"
+             (click)="selectShipment(s.id)">
+          <div class="ls-item-header">
+            <span class="tracking-code" style="font-size:.75rem">{{ s.trackingNumber }}</span>
+            <span class="status-chip" [attr.data-status]="s.status" style="font-size:.7rem">
+              {{ s.status | titlecase }}
             </span>
           </div>
-          <div class="shipment-details">
-            <div class="detail-item">
-              <mat-icon>place</mat-icon>
-              <span>{{ shipment.pickupAddress }}</span>
-            </div>
-            <div class="detail-item">
-              <mat-icon>flag</mat-icon>
-              <span>{{ shipment.dropoffAddress }}</span>
-            </div>
+          <div class="ls-item-row">
+            <span class="material-icons" style="font-size:13px;color:var(--text-muted)">place</span>
+            <span class="ls-item-addr">{{ s.pickupAddress || '—' }}</span>
+          </div>
+          <div class="ls-item-row">
+            <span class="material-icons" style="font-size:13px;color:var(--text-muted)">flag</span>
+            <span class="ls-item-addr">{{ s.dropoffAddress || '—' }}</span>
+          </div>
+          <div *ngIf="!s.pickupLat" class="ls-no-coords">
+            <span class="material-icons" style="font-size:12px">info_outline</span> No coordinates
           </div>
         </div>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </div>
   </div>
 </div>

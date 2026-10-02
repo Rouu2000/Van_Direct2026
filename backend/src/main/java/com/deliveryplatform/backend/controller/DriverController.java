@@ -44,6 +44,15 @@ public class DriverController {
         this.userRepository = userRepository;
     }
 
+    @GetMapping("/{id}/status")
+    @PreAuthorize("hasRole('DRIVER')")
+    public ResponseEntity<?> getStatus(@PathVariable UUID id, HttpServletRequest request) {
+        if (!isSameDriver(id, request)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Driver access required"));
+        }
+        return ResponseEntity.ok(driverStatusService.getOrCreateStatus(id));
+    }
+
     @PutMapping("/{id}/availability")
     @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<?> updateAvailability(

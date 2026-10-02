@@ -1,126 +1,92 @@
-<div class="dashboard-container">
-  <div class="stats-grid" *ngIf="!authService.isAdmin()">
-    <mat-card class="stat-card">
-      <mat-icon class="stat-icon users">groups</mat-icon>
-      <div class="stat-number">{{ users.length }}</div>
-      <div class="stat-label">Total Users</div>
-    </mat-card>
+<!-- ═══════════════════════════════════════════════════════════
+     VAN DIRECT — Home page (Stage B)
+     SiteShell provides the mega-menu header and footer.
+     This file is pure page content.
+     ═══════════════════════════════════════════════════════════ -->
 
-    <mat-card class="stat-card">
-      <mat-icon class="stat-icon shipments">local_shipping</mat-icon>
-      <div class="stat-number">{{ shipmentsCount }}</div>
-      <div class="stat-label">Total Shipments</div>
-    </mat-card>
+<!-- ── 1. HERO ───────────────────────────────────────────────── -->
+<section class="hp-hero" aria-label="Hero">
+  <!-- Background image with dark overlay so text is always readable -->
+  <img src="images/hero.jpg" alt="" aria-hidden="true" width="1440" height="800"
+       class="hp-hero-bg" fetchpriority="high" decoding="async">
+  <div class="hp-hero-overlay" aria-hidden="true"></div>
 
-    <mat-card class="stat-card">
-      <mat-icon class="stat-icon parcels">inventory_2</mat-icon>
-      <div class="stat-number">{{ parcelsCount }}</div>
-      <div class="stat-label">Total Parcels</div>
-    </mat-card>
+  <div class="hp-hero-inner">
+    <div class="hp-hero-text">
+      <span class="hp-badge">🚀 Fast city delivery across Tunisia</span>
+      <h1 class="hp-hero-h1">Your parcel.<br>Our promise.</h1>
+      <p class="hp-hero-sub">
+        From door to door, we treat every package like it's our own.
+        Book in under two minutes, track live on the map.
+      </p>
+      <div class="hp-hero-cta">
+        <a [routerLink]="heroShipRoute" class="btn btn-primary hp-btn-lg">
+          {{ heroShipLabel }}
+        </a>
+        <a routerLink="/register" [queryParams]="{driver:'1'}" class="hp-btn-outline-white">
+          Become a driver
+        </a>
+      </div>
+    </div>
+
+    <!-- Overlapping tab card — sits half-over hero, half below -->
+    <div class="hp-hero-card">
+      <app-hero-tabs></app-hero-tabs>
+    </div>
   </div>
+</section>
 
-  <div class="stats-grid" *ngIf="authService.isAdmin()">
-    <mat-card class="stat-card">
-      <mat-icon class="stat-icon shipments">local_shipping</mat-icon>
-      <div class="stat-number">{{ adminStats?.totalShipments || 0 }}</div>
-      <div class="stat-label">Total Shipments</div>
-    </mat-card>
+<!-- Spacer that gives the overlapping card room below the hero -->
+<div class="hp-hero-card-spacer" aria-hidden="true"></div>
 
-    <mat-card class="stat-card">
-      <mat-icon class="stat-icon delivered">check_circle</mat-icon>
-      <div class="stat-number">{{ adminStats?.deliveredToday || 0 }}</div>
-      <div class="stat-label">Delivered Today</div>
-    </mat-card>
+<!-- ── 2. QUICK ACTIONS ───────────────────────────────────────── -->
+<app-quick-actions></app-quick-actions>
 
-    <mat-card class="stat-card">
-      <mat-icon class="stat-icon drivers">directions_car</mat-icon>
-      <div class="stat-number">{{ adminStats?.activeDrivers || 0 }}</div>
-      <div class="stat-label">Active Drivers</div>
-    </mat-card>
+<!-- ── 3a. BOOK IN MINUTES ────────────────────────────────────── -->
+<app-image-section
+  image="images/courier.jpg"
+  alt="Courier handing over a parcel at a doorstep"
+  title="Book in minutes, delivered the same day"
+  text="Tell us where to pick up and where to deliver. Add as many parcels as you need, pick a service tier, and confirm. A vetted driver near you gets the job instantly."
+  [bullets]="['Door-to-door — no drop-off required','STANDARD or EXPRESS service tiers','Automatic driver assignment via GPS']"
+  cta="Start a shipment"
+  ctaRoute="/customer/shipments/new"
+  [reverse]="false">
+</app-image-section>
 
-    <mat-card class="stat-card">
-      <mat-icon class="stat-icon revenue">attach_money</mat-icon>
-      <div class="stat-number">${{ adminStats?.totalRevenue || 0 }}</div>
-      <div class="stat-label">Total Revenue</div>
-    </mat-card>
+<!-- ── 3b. LIVE MAP ───────────────────────────────────────────── -->
+<app-image-section
+  image="images/van.jpg"
+  alt="Delivery van driving through Tunis streets"
+  title="Follow your parcel live on the map"
+  text="The moment a driver accepts your shipment, a live GPS marker appears on your tracking page. It moves every 5 seconds — no page refresh, no guessing."
+  [bullets]="['Real-time WebSocket updates','Pickup, drop-off and driver markers','In-app notification at every status change']"
+  cta="Track a parcel"
+  ctaRoute="/track"
+  badge="Driver on the way"
+  [reverse]="true">
+</app-image-section>
 
-    <mat-card class="stat-card">
-      <mat-icon class="stat-icon cancellation">cancel</mat-icon>
-      <div class="stat-number">{{ adminStats?.cancellationRate || 0 }}%</div>
-      <div class="stat-label">Cancellation Rate</div>
-    </mat-card>
-  </div>
+<!-- ── 3c. MULTIPLE PARCELS ───────────────────────────────────── -->
+<app-image-section
+  image="images/parcels.jpg"
+  alt="Multiple parcels in different sizes arranged for pickup"
+  title="Multiple parcels, one booking"
+  text="Bundle everything into a single shipment. Each parcel gets its own weight, size category and declared value — all in one booking, one price, one driver."
+  [bullets]="['SMALL, MEDIUM and LARGE size categories','Declared value per item for records','One combined price — no per-parcel surcharge']"
+  cta="Book now"
+  ctaRoute="/customer/shipments/new"
+  [reverse]="false">
+</app-image-section>
 
-  <mat-card class="section-card" *ngIf="authService.isAdmin()">
-    <mat-card-header>
-      <mat-card-title>Quick Actions</mat-card-title>
-      <mat-card-subtitle>Admin shortcuts</mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content class="action-buttons">
-      <a mat-flat-button color="warn" routerLink="/admin/charts">Analytics Dashboard</a>
-      <a mat-stroked-button color="primary" routerLink="/admin/live-shipments">Live Shipments</a>
-      <a mat-stroked-button color="primary" routerLink="/admin/drivers">Drivers Management</a>
-      <a mat-stroked-button color="primary" routerLink="/admin/pending-drivers">Pending Drivers</a>
-      <a mat-stroked-button color="primary" routerLink="/admin/users">Users</a>
-    </mat-card-content>
-  </mat-card>
+<!-- ── 4. SERVICE CARDS ───────────────────────────────────────── -->
+<app-service-cards></app-service-cards>
 
-  <mat-card class="section-card" *ngIf="authService.isAdmin()">
-    <mat-card-header>
-      <mat-card-title>Registered Users</mat-card-title>
-      <mat-card-subtitle>All accounts in the platform</mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content>
-      <div *ngIf="loading" class="state-block">
-        <mat-spinner diameter="36"></mat-spinner>
-      </div>
+<!-- ── 5. DRIVE WITH US BAND ──────────────────────────────────── -->
+<app-drive-band></app-drive-band>
 
-      <div *ngIf="!loading" class="table-wrap">
-        <table mat-table [dataSource]="users" class="users-table">
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
-            <td mat-cell *matCellDef="let u"><strong>{{ u.name }}</strong></td>
-          </ng-container>
+<!-- ── 6. IMAGE CARDS + NEWS ─────────────────────────────────── -->
+<app-image-cards></app-image-cards>
 
-          <ng-container matColumnDef="email">
-            <th mat-header-cell *matHeaderCellDef>Email</th>
-            <td mat-cell *matCellDef="let u">{{ u.email }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="phone">
-            <th mat-header-cell *matHeaderCellDef>Phone</th>
-            <td mat-cell *matCellDef="let u">{{ u.phone || 'N/A' }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="role">
-            <th mat-header-cell *matHeaderCellDef>Role</th>
-            <td mat-cell *matCellDef="let u">{{ u.role || 'CUSTOMER' }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let u">
-              <span class="status-chip" [attr.data-status]="u.status">{{ u.status || 'ACTIVE' }}</span>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
-
-        <div *ngIf="users.length === 0" class="state-block">No users found.</div>
-      </div>
-    </mat-card-content>
-  </mat-card>
-
-  <mat-card class="section-card" *ngIf="!authService.isLoggedIn()">
-    <mat-card-content class="guest-hero">
-      <h2>🚚 VAN DIRECT</h2>
-      <p>Fast, reliable parcel delivery across the city.</p>
-      <div class="action-buttons">
-        <a mat-flat-button color="warn" routerLink="/register">Get Started</a>
-        <a mat-stroked-button color="primary" routerLink="/login">Login</a>
-      </div>
-    </mat-card-content>
-  </mat-card>
-</div>
+<!-- ── 7. TRUST STRIP ────────────────────────────────────────── -->
+<app-trust-strip></app-trust-strip>

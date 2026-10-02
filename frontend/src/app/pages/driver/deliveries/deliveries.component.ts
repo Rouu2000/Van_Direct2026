@@ -21,6 +21,7 @@ export class DriverDeliveriesComponent implements OnInit, OnDestroy {
   selectedDelivery: any | null = null;
   driverId: string | null = null;
   availability: 'AVAILABLE' | 'OFFLINE' = 'OFFLINE';
+  isOnDelivery = false;
   locationWatchId: number | null = null;
   locationTimer: any = null;
   latestPosition: GeolocationPosition | null = null;
@@ -36,7 +37,23 @@ export class DriverDeliveriesComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.authService.hydrateFromStorage();
     this.driverId = this.authService.getUserId();
+    this.loadStatus();
     this.loadDeliveries();
+  }
+
+  /** Load the real availability status from the backend so a page refresh stays in sync. */
+  loadStatus(): void {
+    if (!this.driverId) return;
+    this.driverService.getStatus(this.driverId).subscribe({
+      next: (ds: any) => {
+        const s = ds?.status ?? 'OFFLINE';
+        // ON_DELIVERY is set by the system; treat it as a special read-only state
+        this.availability = (s === 'AVAILABLE') ? 'AVAILABLE' : 'OFFLINE';
+        this.isOnDelivery = (s === 'ON_DELIVERY');
+        this.cdr.markForCheck();
+      },
+      error: () => {} // keep default OFFLINE on error
+    });
   }
 
   ngOnDestroy(): void {
@@ -62,6 +79,7 @@ export class DriverDeliveriesComponent implements OnInit, OnDestroy {
         const onDelivery = this.deliveries.some(
           d => d.status === 'DRIVER_ASSIGNED' || d.status === 'PICKED_UP'
         );
+        this.isOnDelivery = onDelivery;
         if (onDelivery) {
           this.startLocationStreaming();
         }
@@ -87,6 +105,14 @@ export class DriverDeliveriesComponent implements OnInit, OnDestroy {
 
   setAvailability(online: boolean): void {
     if (!this.driverId) return;
+
+    // Guard: cannot go offline while actively on a delivery
+    if (!online && this.isOnDelivery) {
+      alert('You cannot go offline while you have an active delivery. Complete or decline the current delivery first.');
+      this.cdr.markForCheck();
+      return;
+    }
+
     const nextStatus = online ? 'AVAILABLE' : 'OFFLINE';
     this.driverService.setAvailability(this.driverId, nextStatus).subscribe({
       next: () => {

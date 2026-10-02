@@ -61,6 +61,7 @@ export class TrackingComponent implements OnInit, OnDestroy, AfterViewChecked {
   error: string | null = null;
   shipment: any | null = null;
   parcels: any[] = [];
+  driver: any | null = null;
   driverLocation: any | null = null;
   liveTrackingError: string | null = null;
 
@@ -69,6 +70,7 @@ export class TrackingComponent implements OnInit, OnDestroy, AfterViewChecked {
   private dropoffMarker: L.Marker | null = null;
   private driverMarker: L.Marker | null = null;
   private mapNeedsInit = false;
+  private pollTimer: any = null;
 
   constructor(
     private shipmentService: ShipmentService,
@@ -95,6 +97,7 @@ export class TrackingComponent implements OnInit, OnDestroy, AfterViewChecked {
   ngOnDestroy(): void {
     this.webSocketService.disconnect();
     this.destroyMap();
+    this.stopPolling();
   }
 
   track(): void {
@@ -108,19 +111,26 @@ export class TrackingComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.error = null;
     this.shipment = null;
     this.parcels = [];
+    this.driver = null;
     this.driverLocation = null;
     this.liveTrackingError = null;
     this.webSocketService.disconnect();
     this.destroyMap();
+    this.stopPolling();
     this.cdr.markForCheck();
 
     this.shipmentService.trackShipment(this.trackingNumber.trim()).subscribe({
       next: (res) => {
         this.shipment = res?.shipment || res;
         this.parcels = res?.parcels || [];
+        this.driver = res?.driver || null;
         this.loading = false;
         this.mapNeedsInit = this.isLiveTrackable();
         this.connectLiveTracking();
+        // Poll every 5s so status updates without a manual refresh
+        if (this.isLiveTrackable()) {
+          this.startPolling();
+        }
         this.cdr.markForCheck();
       },
       error: () => {
@@ -242,6 +252,42 @@ export class TrackingComponent implements OnInit, OnDestroy, AfterViewChecked {
     } else {
       this.driverMarker.setLatLng(latLng);
     }
+  }
+
+  private startPolling(): void {
+    this.stopPolling();
+    this.pollTimer = setInterval(() => this.pollOnce(), 5000);
+  }
+
+  private stopPolling(): void {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
+    }
+  }
+
+  private pollOnce(): void {
+    if (!this.trackingNumber) return;
+    this.shipmentService.trackShipment(this.trackingNumber.trim()).subscribe({
+      next: (res) => {
+        const updated = res?.shipment || res;
+        const prevStatus = this.shipment?.status;
+        this.shipment = updated;
+        this.driver = res?.driver || this.driver;
+        this.parcels = res?.parcels || this.parcels;
+        // If status changed to a terminal state, stop polling
+        if (updated?.status === 'DELIVERED' || updated?.status === 'CANCELLED') {
+          this.stopPolling();
+          this.webSocketService.disconnect();
+          this.destroyMap();
+        }
+        if (prevStatus !== updated?.status) {
+          this.mapNeedsInit = this.isLiveTrackable();
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => {} // silent on poll errors
+    });
   }
 
   private destroyMap(): void {

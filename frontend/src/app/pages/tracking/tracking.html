@@ -30,6 +30,19 @@
 
       <p class="estimate">{{ estimatedNote() }}</p>
 
+      <!-- Driver info banner — shown when a driver is assigned -->
+      <div *ngIf="driver" class="driver-banner">
+        <mat-icon>directions_car</mat-icon>
+        <span *ngIf="shipment.status === 'DRIVER_ASSIGNED'">
+          <strong>{{ driver.firstName }}</strong> is heading to pick up your parcel
+          <span *ngIf="driver.vehicleType"> · {{ driver.vehicleType }}</span>
+        </span>
+        <span *ngIf="shipment.status === 'PICKED_UP'">
+          <strong>{{ driver.firstName }}</strong> has your parcel and is on the way
+          <span *ngIf="driver.vehicleType"> · {{ driver.vehicleType }}</span>
+        </span>
+      </div>
+
       <div *ngIf="isLiveTrackable()" class="live-location">
         <h4>Live Driver Location</h4>
         <div #mapContainer class="map-container"></div>

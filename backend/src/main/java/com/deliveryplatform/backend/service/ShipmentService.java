@@ -200,11 +200,20 @@ public class ShipmentService {
         if (status == Shipment.ShipmentStatus.DELIVERED) {
             shipment.setDeliveredAt(LocalDateTime.now());
             if (driverId != null) {
-                driverStatusRepository.findByDriverId(driverId).ifPresent(driverStatus -> {
-                    driverStatus.setStatus(DriverStatus.Status.AVAILABLE);
-                    driverStatusRepository.save(driverStatus);
-                });
                 deliveryEventService.record(id, driverId, DeliveryEvent.EventType.DELIVERED);
+                // Only free the driver if they have no other active shipments
+                long remaining = shipmentRepository.countByAssignedDriverIdAndStatusIn(
+                        driverId,
+                        List.of(Shipment.ShipmentStatus.DRIVER_ASSIGNED, Shipment.ShipmentStatus.PICKED_UP)
+                );
+                // remaining > 0 means another active shipment still exists (before this save)
+                // After save this shipment will be DELIVERED so subtract 1
+                if (remaining <= 1) {
+                    driverStatusRepository.findByDriverId(driverId).ifPresent(driverStatus -> {
+                        driverStatus.setStatus(DriverStatus.Status.AVAILABLE);
+                        driverStatusRepository.save(driverStatus);
+                    });
+                }
             }
         } else if (status == Shipment.ShipmentStatus.PICKED_UP) {
             if (driverId != null) {
@@ -216,10 +225,17 @@ public class ShipmentService {
             }
         } else if (status == Shipment.ShipmentStatus.CANCELLED) {
             if (driverId != null) {
-                driverStatusRepository.findByDriverId(driverId).ifPresent(driverStatus -> {
-                    driverStatus.setStatus(DriverStatus.Status.AVAILABLE);
-                    driverStatusRepository.save(driverStatus);
-                });
+                // Only free the driver if they have no other active shipments
+                long remaining = shipmentRepository.countByAssignedDriverIdAndStatusIn(
+                        driverId,
+                        List.of(Shipment.ShipmentStatus.DRIVER_ASSIGNED, Shipment.ShipmentStatus.PICKED_UP)
+                );
+                if (remaining <= 1) {
+                    driverStatusRepository.findByDriverId(driverId).ifPresent(driverStatus -> {
+                        driverStatus.setStatus(DriverStatus.Status.AVAILABLE);
+                        driverStatusRepository.save(driverStatus);
+                    });
+                }
             }
         }
 

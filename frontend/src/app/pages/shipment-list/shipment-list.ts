@@ -1,5 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CadPipe } from '../../shared/cad.pipe';
 import { FormsModule } from '@angular/forms';
 import { ShipmentService } from '../../services/shipment.service';
 import { UserService } from '../../services/user.service';
@@ -7,7 +8,7 @@ import { UserService } from '../../services/user.service';
 @Component({
   selector: 'app-shipment-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CadPipe, CommonModule, FormsModule],
   templateUrl: './shipment-list.html',
   styleUrl: './shipment-list.css'
 })

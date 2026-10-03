@@ -8,8 +8,8 @@ import { PageLayoutComponent } from '../../components/page-layout/page-layout.co
   standalone: true,
   imports: [CommonModule, RouterLink, PageLayoutComponent],
   template: `
-<app-page-layout title="Careers" subtitle="Help us build the fastest delivery network in Tunisia." eyebrow="Join the team">
-  <p class="cr-intro">VAN DIRECT is a fast-growing startup. We value autonomy, clear communication and people who take ownership. Current openings are listed below. Don't see a fit? Send a spontaneous application to <strong>TODO: careers&#64;vandirect.tn</strong>.</p>
+<app-page-layout title="Careers" subtitle="Help us build the fastest delivery network in the Ottawa region." eyebrow="Join the team">
+  <p class="cr-intro">VAN DIRECT is a fast-growing startup based in Ottawa, Ontario. We value autonomy, clear communication and people who take ownership. Current openings are listed below. Don't see a fit? Send a spontaneous application to <strong>TODO: careers&#64;vandirect.ca</strong>.</p>
   <div class="cr-jobs">
     <div *ngFor="let j of jobs" class="cr-job">
       <div class="cr-job-left">
@@ -26,7 +26,7 @@ import { PageLayoutComponent } from '../../components/page-layout/page-layout.co
   <p class="cr-note">⚠ These are placeholder job listings. Replace with real openings before go-live.</p>
   <div class="cr-driver-cta">
     <h2>Drive for VAN DIRECT</h2>
-    <p>Flexible hours, competitive pay per delivery, weekly payout. All you need is a vehicle and a valid licence.</p>
+    <p>Flexible hours, competitive pay per delivery, weekly payout. All you need is a vehicle and a valid Canadian driver's licence.</p>
     <a routerLink="/register" class="btn btn-primary">Become a driver →</a>
   </div>
 </app-page-layout>`,
@@ -48,10 +48,10 @@ import { PageLayoutComponent } from '../../components/page-layout/page-layout.co
 })
 export class CareersComponent {
   jobs = [
-    { dept: 'Engineering',  title: 'Senior Angular Developer',     location: 'Tunis / Remote', type: 'Full-time' },
-    { dept: 'Engineering',  title: 'Spring Boot Backend Engineer',  location: 'Tunis',          type: 'Full-time' },
-    { dept: 'Operations',   title: 'City Operations Manager',       location: 'Sfax',           type: 'Full-time' },
-    { dept: 'Customer Care',title: 'Support Agent (French/Arabic)', location: 'Tunis',          type: 'Part-time' },
-    { dept: 'Growth',       title: 'Business Development Manager',  location: 'Tunis',          type: 'Full-time' },
+    { dept: 'Engineering',   title: 'Senior Angular Developer',      location: 'Ottawa, ON / Remote', type: 'Full-time' },
+    { dept: 'Engineering',   title: 'Spring Boot Backend Engineer',   location: 'Ottawa, ON',          type: 'Full-time' },
+    { dept: 'Operations',    title: 'City Operations Manager',        location: 'Ottawa, ON',          type: 'Full-time' },
+    { dept: 'Customer Care', title: 'Support Agent (English/French)', location: 'Ottawa, ON',          type: 'Part-time' },
+    { dept: 'Growth',        title: 'Business Development Manager',   location: 'Ottawa, ON',          type: 'Full-time' },
   ];
 }

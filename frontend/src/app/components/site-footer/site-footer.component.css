@@ -117,3 +117,7 @@
 .sf-lang-btn:hover  { color: rgba(255,255,255,.8); }
 .sf-lang-sep { color: rgba(255,255,255,.2); }
 .sf-lang-note { font-size: .72rem; color: rgba(255,255,255,.2); }
+
+.sf-logo-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+
+.sf-nl-error { color: #fca5a5; font-size: .8rem; margin-top: 4px; width: 100%; }

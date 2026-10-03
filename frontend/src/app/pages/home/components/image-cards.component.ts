@@ -71,6 +71,6 @@ export class ImageCardsComponent {
     { img: 'images/van.jpg',       imgAlt: 'Delivery van on the road',   meta: 'Feature',     title: 'How live tracking works',       text: 'Your driver\'s GPS position is pushed to your screen every 5 seconds over a WebSocket.',         route: '/live-tracking',     cta: 'Learn more',   tag: '',        wide: false },
     { img: 'images/city.jpg',      imgAlt: 'City street from above',     meta: 'Tips',        title: 'Tips for faster delivery',      text: 'A precise address and a weight that matches the booking means a smoother handoff and no delays.', route: '/how-it-works',      cta: 'Read tips',    tag: '',        wide: false },
     /* Placeholder news card — replace content before go-live */
-    { img: 'images/warehouse.jpg', imgAlt: 'Sorting warehouse interior', meta: 'News',        title: 'VAN DIRECT expands to Sfax and Sousse', text: 'We are delighted to announce that our delivery network now covers two new Tunisian cities, with more on the way.', route: '/about', cta: 'Read announcement', tag: 'New', wide: true },
+    { img: 'images/warehouse.jpg', imgAlt: 'Sorting warehouse interior', meta: 'News',        title: 'VAN DIRECT launches service in Kanata and Orleans', text: 'We are delighted to announce that our delivery network now covers two new Ottawa neighbourhoods, with more on the way.', route: '/about', cta: 'Read announcement', tag: 'New', wide: true },
   ];
 }

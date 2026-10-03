@@ -24,6 +24,20 @@ public interface ShipmentRepository extends JpaRepository<Shipment, UUID> {
 
     List<Shipment> findByAssignedDriverIdAndStatusIn(UUID driverId, List<Shipment.ShipmentStatus> statuses);
 
+    long countByAssignedDriverIdAndStatusIn(UUID driverId, List<Shipment.ShipmentStatus> statuses);
+
+    @Query("SELECT s FROM Shipment s WHERE s.assignedDriverId = :driverId " +
+           "AND s.status IN :statuses " +
+           "AND (:fromDate IS NULL OR s.deliveredAt >= :fromDate) " +
+           "AND (:toDate IS NULL OR s.deliveredAt <= :toDate) " +
+           "ORDER BY s.deliveredAt DESC NULLS LAST")
+    org.springframework.data.domain.Page<Shipment> findDriverHistory(
+            @Param("driverId") UUID driverId,
+            @Param("statuses") List<Shipment.ShipmentStatus> statuses,
+            @Param("fromDate") java.time.LocalDateTime fromDate,
+            @Param("toDate") java.time.LocalDateTime toDate,
+            org.springframework.data.domain.Pageable pageable);
+
     List<Shipment> findByStatus(Shipment.ShipmentStatus status);
 
     List<Shipment> findByStatusAndOfferExpiresAtBefore(Shipment.ShipmentStatus status, LocalDateTime before);

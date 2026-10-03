@@ -14,100 +14,175 @@
     <label class="toggle-switch" [class.disabled]="isOnDelivery">
       <input type="checkbox" [checked]="availability === 'AVAILABLE'" [disabled]="isOnDelivery"
              (change)="setAvailability($any($event.target).checked)">
-      <span class="toggle-track">
-        <span class="toggle-thumb"></span>
-      </span>
+      <span class="toggle-track"><span class="toggle-thumb"></span></span>
     </label>
   </div>
 
-  <!-- Loading -->
-  <div *ngIf="loading" class="drv-loading">
-    <div class="skeleton" style="height:120px;border-radius:var(--radius-lg)"></div>
-    <div class="skeleton" style="height:80px;border-radius:var(--radius-lg)"></div>
+  <!-- Tabs -->
+  <div class="drv-tabs" role="tablist">
+    <button role="tab" class="drv-tab" [class.active]="activeTab === 'active'"
+            [attr.aria-selected]="activeTab === 'active'"
+            (click)="setTab('active')">
+      <span class="material-icons" style="font-size:16px">local_shipping</span>
+      Active
+      <span *ngIf="deliveries.length > 0" class="drv-tab-badge">{{ deliveries.length }}</span>
+    </button>
+    <button role="tab" class="drv-tab" [class.active]="activeTab === 'history'"
+            [attr.aria-selected]="activeTab === 'history'"
+            (click)="setTab('history')">
+      <span class="material-icons" style="font-size:16px">history</span>
+      History
+    </button>
   </div>
 
-  <div *ngIf="error" class="drv-error">{{ error }}</div>
-
-  <!-- Empty state -->
-  <div *ngIf="!loading && !error && deliveries.length === 0" class="drv-empty">
-    <span class="material-icons" style="font-size:52px;color:var(--border-strong)">local_shipping</span>
-    <h3>No deliveries assigned yet</h3>
-    <p>Go online to start receiving delivery offers.</p>
-  </div>
-
-  <!-- Delivery cards -->
-  <div *ngIf="!loading && deliveries.length > 0" class="drv-cards">
-    <div *ngFor="let d of deliveries" class="drv-card" [class.active-delivery]="d.status === 'PICKED_UP'">
-
-      <div class="drv-card-header">
-        <div class="drv-card-left">
-          <span class="tracking-code">{{ d.trackingNumber }}</span>
-          <span class="status-chip" [attr.data-status]="d.status" style="margin-left:8px">{{ d.status }}</span>
+  <!-- ── ACTIVE TAB ────────────────────────────────────────── -->
+  <ng-container *ngIf="activeTab === 'active'">
+    <div *ngIf="loading" class="drv-loading">
+      <div class="skeleton" style="height:120px;border-radius:var(--radius-lg)"></div>
+      <div class="skeleton" style="height:80px;border-radius:var(--radius-lg)"></div>
+    </div>
+    <div *ngIf="error" class="drv-error">{{ error }}</div>
+    <div *ngIf="!loading && !error && deliveries.length === 0" class="drv-empty">
+      <span class="material-icons" style="font-size:52px;color:var(--border-strong)">local_shipping</span>
+      <h3>No active deliveries</h3>
+      <p>Go online to start receiving delivery offers.</p>
+    </div>
+    <div *ngIf="!loading && deliveries.length > 0" class="drv-cards">
+      <div *ngFor="let d of deliveries" class="drv-card" [class.active-delivery]="d.status === 'PICKED_UP'">
+        <div class="drv-card-header">
+          <div class="drv-card-left">
+            <span class="tracking-code">{{ d.trackingNumber }}</span>
+            <span class="status-chip" [attr.data-status]="d.status" style="margin-left:8px">{{ d.status }}</span>
+          </div>
+          <div class="drv-price">€{{ d.priceAmount | number:'1.2-2' }} · {{ d.serviceTier }}</div>
         </div>
-        <div class="drv-price">€{{ d.priceAmount | number:'1.2-2' }} · {{ d.serviceTier }}</div>
-      </div>
-
-      <!-- Route visual -->
-      <div class="drv-route">
-        <div class="drv-route-point">
-          <span class="drv-point-dot pickup-dot"></span>
-          <div class="drv-point-info">
-            <span class="drv-point-label">Pickup</span>
-            <span class="drv-point-addr">{{ d.pickupAddress }}</span>
+        <div class="drv-route">
+          <div class="drv-route-point">
+            <span class="drv-point-dot pickup-dot"></span>
+            <div class="drv-point-info">
+              <span class="drv-point-label">Pickup</span>
+              <span class="drv-point-addr">{{ d.pickupAddress }}</span>
+            </div>
+          </div>
+          <div class="drv-route-dashes"></div>
+          <div class="drv-route-point">
+            <span class="drv-point-dot dropoff-dot"></span>
+            <div class="drv-point-info">
+              <span class="drv-point-label">Recipient · {{ d.recipientName }}</span>
+              <span class="drv-point-addr">{{ d.dropoffAddress }}</span>
+            </div>
           </div>
         </div>
-        <div class="drv-route-dashes"></div>
-        <div class="drv-route-point">
-          <span class="drv-point-dot dropoff-dot"></span>
-          <div class="drv-point-info">
-            <span class="drv-point-label">Recipient · {{ d.recipientName }}</span>
-            <span class="drv-point-addr">{{ d.dropoffAddress }}</span>
-          </div>
+        <!-- Offer expiry warning -->
+        <div *ngIf="d.offerExpiresAt" class="drv-offer-expiry">
+          <span class="material-icons" style="font-size:14px">timer</span>
+          Offer pending — accept before it expires
         </div>
-      </div>
-
-      <!-- PRIMARY action button (one big button per status) -->
-      <div class="drv-actions">
-        <ng-container [ngSwitch]="d.status">
-
-          <ng-container *ngSwitchCase="'DRIVER_ASSIGNED'">
-            <button class="drv-primary-btn accept-btn"
-                    [disabled]="updatingId === d.id"
-                    (click)="accept(d.id)">
-              <span class="material-icons">check_circle</span>
-              {{ updatingId === d.id ? 'Accepting…' : 'Accept delivery' }}
-            </button>
-            <button class="drv-secondary-btn" (click)="decline(d.id)" [disabled]="updatingId === d.id">
-              Decline
-            </button>
+        <div class="drv-actions">
+          <ng-container [ngSwitch]="d.status">
+            <ng-container *ngSwitchCase="'DRIVER_ASSIGNED'">
+              <button class="drv-primary-btn accept-btn" [disabled]="updatingId === d.id" (click)="accept(d.id)">
+                <span class="material-icons">check_circle</span>
+                {{ updatingId === d.id ? 'Accepting…' : 'Accept' }}
+              </button>
+              <button class="drv-secondary-btn" (click)="decline(d.id)" [disabled]="updatingId === d.id">Decline</button>
+            </ng-container>
+            <ng-container *ngSwitchCase="'PICKED_UP'">
+              <button class="drv-primary-btn deliver-btn" [disabled]="updatingId === d.id" (click)="updateStatus(d.id, 'DELIVERED')">
+                <span class="material-icons">flag</span>
+                {{ updatingId === d.id ? 'Delivering…' : 'Mark Delivered' }}
+              </button>
+            </ng-container>
           </ng-container>
-
-          <ng-container *ngSwitchCase="'PICKED_UP'">
-            <!-- After accept but before PICKED_UP: show PICKED_UP isn't needed, status IS picked_up, show deliver -->
-            <button class="drv-primary-btn deliver-btn"
-                    [disabled]="updatingId === d.id"
-                    (click)="updateStatus(d.id, 'DELIVERED')">
-              <span class="material-icons">flag</span>
-              {{ updatingId === d.id ? 'Delivering…' : 'Mark Delivered' }}
-            </button>
-          </ng-container>
-
-        </ng-container>
-
-        <!-- After accept (DRIVER_ASSIGNED + no offer expiry shown by Accept button becoming inactive) -->
-        <!-- Mark Picked Up only available after Accept is done -->
-        <button *ngIf="d.status === 'DRIVER_ASSIGNED' && !d.offerExpiresAt"
-                class="drv-primary-btn pickup-btn"
-                [disabled]="updatingId === d.id"
-                (click)="updateStatus(d.id, 'PICKED_UP')">
-          <span class="material-icons">inventory_2</span>
-          {{ updatingId === d.id ? 'Updating…' : 'Mark Picked Up' }}
-        </button>
-
-        <button class="drv-detail-btn" (click)="openDetails(d)">Details</button>
+          <button *ngIf="d.status === 'DRIVER_ASSIGNED' && !d.offerExpiresAt"
+                  class="drv-primary-btn pickup-btn" [disabled]="updatingId === d.id"
+                  (click)="updateStatus(d.id, 'PICKED_UP')">
+            <span class="material-icons">inventory_2</span>
+            {{ updatingId === d.id ? 'Updating…' : 'Mark Picked Up' }}
+          </button>
+          <button class="drv-detail-btn" (click)="openDetails(d)">Details</button>
+        </div>
       </div>
     </div>
-  </div>
+  </ng-container>
+
+  <!-- ── HISTORY TAB ───────────────────────────────────────── -->
+  <ng-container *ngIf="activeTab === 'history'">
+    <!-- Summary cards -->
+    <div class="hist-summary">
+      <div class="hist-stat">
+        <span class="hist-stat-val">{{ deliveredToday }}</span>
+        <span class="hist-stat-lbl">Today</span>
+      </div>
+      <div class="hist-stat">
+        <span class="hist-stat-val">{{ deliveredThisWeek }}</span>
+        <span class="hist-stat-lbl">This week</span>
+      </div>
+      <div class="hist-stat">
+        <span class="hist-stat-val">{{ deliveredTotal }}</span>
+        <span class="hist-stat-lbl">Total delivered</span>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="hist-filters">
+      <select class="form-control" style="flex:0 0 140px" [(ngModel)]="historyStatusFilter">
+        <option value="">All statuses</option>
+        <option value="DELIVERED">Delivered</option>
+        <option value="CANCELLED">Cancelled</option>
+      </select>
+      <input type="date" class="form-control" style="flex:0 0 140px" [(ngModel)]="historyFrom" placeholder="From">
+      <input type="date" class="form-control" style="flex:0 0 140px" [(ngModel)]="historyTo" placeholder="To">
+      <button class="btn btn-primary btn-sm" (click)="applyHistoryFilters()">Apply</button>
+      <button class="btn btn-ghost btn-sm" (click)="clearHistoryFilters()">Clear</button>
+    </div>
+
+    <div *ngIf="historyLoading" class="drv-loading">
+      <div *ngFor="let i of [1,2,3]" class="skeleton" style="height:64px;border-radius:var(--radius-md)"></div>
+    </div>
+
+    <div *ngIf="historyError" class="drv-error">{{ historyError }}</div>
+
+    <div *ngIf="!historyLoading && !historyError && history.length === 0" class="drv-empty">
+      <span class="material-icons" style="font-size:40px;color:var(--border-strong)">history</span>
+      <p>No completed deliveries found.</p>
+    </div>
+
+    <!-- History list -->
+    <div *ngIf="!historyLoading && history.length > 0" class="hist-list">
+      <div *ngFor="let s of history" class="hist-item">
+        <div class="hist-item-left">
+          <span class="tracking-code" style="font-size:.8rem">{{ s.trackingNumber }}</span>
+          <span class="status-chip" [attr.data-status]="s.status" style="font-size:.7rem;margin-left:6px">{{ s.status }}</span>
+        </div>
+        <div class="hist-item-route">
+          <span class="material-icons" style="font-size:13px;color:var(--text-muted)">place</span>
+          <span class="hist-addr">{{ s.pickupAddress }}</span>
+          <span class="material-icons" style="font-size:13px;color:var(--text-muted);margin:0 4px">arrow_forward</span>
+          <span class="hist-addr">{{ s.dropoffAddress }}</span>
+        </div>
+        <div class="hist-item-meta">
+          <span>€{{ s.priceAmount | number:'1.2-2' }}</span>
+          <span *ngIf="s.deliveredAt">{{ s.deliveredAt | date:'dd MMM y, HH:mm' }}</span>
+          <span *ngIf="deliveryDuration(s) !== '—'">⏱ {{ deliveryDuration(s) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="historyTotalPages > 1" class="dt-pagination" style="margin-top:12px">
+      <span class="page-info">{{ historyPage * historyPageSize + 1 }}–{{ Math.min((historyPage + 1) * historyPageSize, historyTotal) }} of {{ historyTotal }}</span>
+      <div class="page-btns">
+        <button class="page-btn" [disabled]="historyPage === 0" (click)="prevHistoryPage()">
+          <span class="material-icons">chevron_left</span>
+        </button>
+        <span class="page-num">{{ historyPage + 1 }} / {{ historyTotalPages }}</span>
+        <button class="page-btn" [disabled]="historyPage >= historyTotalPages - 1" (click)="nextHistoryPage()">
+          <span class="material-icons">chevron_right</span>
+        </button>
+      </div>
+    </div>
+  </ng-container>
 
   <!-- Detail modal -->
   <div *ngIf="selectedDelivery" class="modal-overlay" (click)="closeDetails()">

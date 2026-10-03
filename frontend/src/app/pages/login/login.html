@@ -1,45 +1,46 @@
 <div class="auth-page">
   <mat-card class="auth-card">
-    <div class="auth-brand">
-      <span class="truck-icon">🚚</span>
-      <span class="brand-name">VAN DIRECT</span>
-    </div>
-
+    <div class="auth-brand"><app-brand-logo size="md" link="/"></app-brand-logo></div>
     <h2 class="auth-title">Welcome Back</h2>
     <p class="auth-subtitle">Sign in to continue</p>
 
-    <div *ngIf="errorMessage" class="error-alert">
-      <mat-icon>error</mat-icon>
-      <span>{{ errorMessage }}</span>
-    </div>
+    <div *ngIf="serverError" class="vf-form-error" role="alert">{{ serverError }}</div>
 
-    <form (ngSubmit)="onSubmit()" class="auth-form">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Email Address</mat-label>
-        <input matInput type="email" name="email" [(ngModel)]="credentials.email" required />
-        <mat-icon matPrefix>email</mat-icon>
-      </mat-form-field>
+    <form #formEl [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form" novalidate>
 
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Password</mat-label>
-        <input matInput [type]="hidePassword ? 'password' : 'text'" name="password" [(ngModel)]="credentials.password" required />
-        <mat-icon matPrefix>lock</mat-icon>
-        <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
-          <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-        </button>
-      </mat-form-field>
+      <div class="vf-field">
+        <label class="vf-label" for="login-email">Email address <span class="vf-req">*</span></label>
+        <input id="login-email" class="vf-input" type="email" formControlName="email"
+               autocomplete="email" placeholder="you@example.com"
+               [attr.aria-invalid]="showErr(email)"
+               aria-describedby="login-email-err">
+        <span id="login-email-err" class="vf-error" *ngIf="showErr(email)">{{ getError(email) }}</span>
+      </div>
+
+      <div class="vf-field">
+        <label class="vf-label" for="login-pw">Password <span class="vf-req">*</span></label>
+        <div class="vf-pw-wrap">
+          <input id="login-pw" class="vf-input" [type]="hidePassword ? 'password' : 'text'"
+                 formControlName="password" autocomplete="current-password"
+                 [attr.aria-invalid]="showErr(password)"
+                 aria-describedby="login-pw-err">
+          <button type="button" class="vf-pw-toggle" (click)="hidePassword=!hidePassword"
+                  [attr.aria-label]="hidePassword ? 'Show password' : 'Hide password'">
+            <span class="material-icons" style="font-size:18px">{{ hidePassword ? 'visibility_off' : 'visibility' }}</span>
+          </button>
+        </div>
+        <span id="login-pw-err" class="vf-error" *ngIf="showErr(password)">{{ getError(password) }}</span>
+      </div>
 
       <div class="forgot-link-container">
         <a routerLink="/forgot-password" class="forgot-link">Forgot password?</a>
       </div>
 
-      <button mat-flat-button color="warn" class="submit-btn" type="submit" [disabled]="submitting">
-        {{ submitting ? 'Signing in...' : 'Login' }}
+      <button class="btn btn-primary submit-btn" type="submit" [disabled]="submitting">
+        {{ submitting ? 'Signing in…' : 'Login' }}
       </button>
     </form>
 
-    <p class="auth-footer">
-      Don't have an account? <a routerLink="/register">Register here</a>
-    </p>
+    <p class="auth-footer">Don't have an account? <a routerLink="/register">Register here</a></p>
   </mat-card>
 </div>

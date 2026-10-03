@@ -45,9 +45,9 @@ export class LegalComponent {
 export class TermsComponent {
   sections = [
     { heading: '1. Acceptance of terms', paras: ['By accessing or using the VAN DIRECT platform you agree to be bound by these Terms of Service. If you do not agree, do not use the platform.'] },
-    { heading: '2. Service description', paras: ['VAN DIRECT provides an on-demand parcel delivery service that connects customers with independent drivers operating within agreed service areas in Tunisia.'] },
+    { heading: '2. Service description', paras: ['VAN DIRECT provides an on-demand parcel delivery service that connects customers with independent drivers operating within agreed service areas in the Ottawa–Gatineau region, Ontario and Quebec, Canada.'] },
     { heading: '3. User accounts', paras: ['You must provide accurate information when creating an account. You are responsible for maintaining the confidentiality of your credentials and for all activities that occur under your account.'] },
-    { heading: '4. Prohibited items', paras: ['You may not ship flammable or explosive materials, illegal substances, live animals, counterfeit goods, or any item prohibited by Tunisian law.'] },
+    { heading: '4. Prohibited items', paras: ['You may not ship flammable or explosive materials, illegal substances, live animals, counterfeit goods, or any item prohibited by Canadian federal or provincial law.'] },
     { heading: '5. Liability', paras: ['VAN DIRECT\'s liability is limited to the declared value of the parcel, subject to the conditions set out in the Damage and Loss Policy. We are not liable for indirect or consequential losses.'] },
     { heading: '6. Changes to terms', paras: ['We reserve the right to update these terms at any time. Continued use of the platform after changes constitutes acceptance of the revised terms.'] },
   ];
@@ -66,7 +66,7 @@ export class PrivacyComponent {
     { heading: '2. How we use your data', paras: ['To process and deliver shipments, to communicate order status, to improve our services, to prevent fraud, and where required by law.'] },
     { heading: '3. Data sharing', paras: ['We share your data only with assigned drivers (name, phone, pickup address) and with service providers under confidentiality agreements. We do not sell personal data.'] },
     { heading: '4. Retention', paras: ['Account data is retained while your account is active and for 5 years thereafter to comply with legal obligations. You may request deletion by contacting support.'] },
-    { heading: '5. Your rights', paras: ['Under applicable Tunisian data-protection law you have the right to access, correct and delete your personal data. Contact support to exercise these rights.'] },
+    { heading: '5. Your rights', paras: ['Under applicable Canadian federal (PIPEDA) and provincial privacy law you have the right to access, correct and delete your personal data. Contact support to exercise these rights.'] },
     { heading: '6. Cookies', paras: ['See our Cookie Policy for details on how we use cookies and tracking technologies.'] },
   ];
 }

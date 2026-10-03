@@ -5,7 +5,7 @@ import { PageLayoutComponent } from '../../components/page-layout/page-layout.co
 @Component({ selector: 'app-drop-off-points', standalone: true,
   imports: [CommonModule, PageLayoutComponent],
   template: `
-<app-page-layout title="Drop-off points" subtitle="Leave your pre-labelled parcel at any VAN DIRECT partner location." eyebrow="Shipping">
+<app-page-layout title="Drop-off points" subtitle="Leave your pre-labelled parcel at any VAN DIRECT partner location in the Ottawa region." eyebrow="Shipping">
   <p class="dop-note">⚠ These are placeholder locations — replace with real data before go-live.</p>
   <div class="dop-grid">
     <div *ngFor="let loc of locations" class="dop-card">
@@ -28,11 +28,11 @@ import { PageLayoutComponent } from '../../components/page-layout/page-layout.co
 })
 export class DropOffPointsComponent {
   locations = [
-    { city:'Tunis',    name:'Centre Ville Partner',   address:'TODO: Avenue Habib Bourguiba, Tunis 1000',  hours:'Mon–Sat 8am–8pm' },
-    { city:'Tunis',    name:'La Marsa Relais',         address:'TODO: Rue de la Plage, La Marsa 2078',      hours:'Mon–Sat 9am–7pm' },
-    { city:'Sfax',     name:'Sfax Centre Logistique',  address:'TODO: Avenue Taïeb Mhiri, Sfax 3000',       hours:'Mon–Fri 8am–6pm' },
-    { city:'Sousse',   name:'Sousse Médina Point',     address:'TODO: Rue de Paris, Sousse 4000',           hours:'Mon–Sat 9am–7pm' },
-    { city:'Monastir', name:'Monastir Airport Relay',  address:'TODO: Zone Aéroportuaire, Monastir 5000',   hours:'Daily 7am–9pm'   },
-    { city:'Béja',     name:'Béja Central Drop-off',   address:'TODO: Avenue Habib Chaker, Béja 9000',      hours:'Mon–Fri 8am–5pm' },
+    { city: 'Ottawa',   name: 'Downtown Partner',        address: '123 Example Street, Ottawa, ON K1A 0B1',           hours: 'Mon–Sat 8am–8pm' },
+    { city: 'Ottawa',   name: 'Kanata Relay',            address: '456 Sample Road, Kanata, ON K2K 0A1',              hours: 'Mon–Sat 9am–7pm' },
+    { city: 'Ottawa',   name: "Barrhaven Drop-off",      address: '789 Placeholder Ave, Barrhaven, ON K2J 0B2',       hours: 'Mon–Fri 8am–6pm' },
+    { city: 'Gatineau', name: 'Hull Centre Point',        address: '321 Test Boulevard, Gatineau, QC J8X 0A1',         hours: 'Mon–Sat 9am–7pm' },
+    { city: 'Ottawa',   name: 'Orleans East Relay',       address: '654 Demo Lane, Orleans, ON K1C 0C3',               hours: 'Mon–Sat 8am–8pm' },
+    { city: 'Ottawa',   name: "Nepean West Drop-off",     address: '987 Fictional Street, Nepean, ON K2H 0D4',         hours: 'Mon–Fri 8am–5pm' },
   ];
 }

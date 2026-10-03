@@ -53,21 +53,23 @@ export class HeroTabsComponent {
 
   doEstimate(): void {
     const { pickupCity, dropoffCity, weightKg, size, tier } = this.est;
-    if (!pickupCity.trim() || !dropoffCity.trim()) {
-      this.estimateError.set('Please enter both pickup and drop-off cities.');
+    // Validate
+    if (!pickupCity.trim() && !dropoffCity.trim()) {
+      this.estimateError.set('Please enter at least a pickup city or postal code.');
       return;
     }
-    if (!weightKg || weightKg <= 0) {
-      this.estimateError.set('Please enter a valid weight.');
-      return;
-    }
+    if (!pickupCity.trim()) { this.estimateError.set('Please enter a pickup city.'); return; }
+    if (!dropoffCity.trim()) { this.estimateError.set('Please enter a drop-off city.'); return; }
+    const w = Number(weightKg);
+    if (!weightKg || isNaN(w) || w < 0.1) { this.estimateError.set('Weight must be at least 0.1 kg.'); return; }
+    if (w > 50) { this.estimateError.set('Weight must be at most 50 kg.'); return; }
     this.estimating.set(true);
     this.estimateError.set(null);
     this.estimateResult.set(null);
 
     // Use Nominatim to geocode cities, then call the public estimate endpoint
     const geocode = (q: string) =>
-      this.http.get<any[]>(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q + ', Tunisia')}&format=json&limit=1&countrycodes=tn`).toPromise();
+      this.http.get<any[]>(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q + ', Canada')}&format=json&limit=1&countrycodes=ca`).toPromise();
 
     Promise.all([geocode(pickupCity), geocode(dropoffCity)]).then(([pickup, dropoff]) => {
       const p = pickup?.[0];

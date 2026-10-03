@@ -20,7 +20,7 @@ import { RouterLink } from '@angular/router';
           </svg>
         </div>
         <h3 class="sc-tier">STANDARD</h3>
-        <p class="sc-desc">Reliable everyday delivery â€” perfect for parcels that need to arrive safely without urgency.</p>
+        <p class="sc-desc">Reliable everyday delivery â$” perfect for parcels that need to arrive safely without urgency.</p>
         <ul class="sc-benefits">
           <li>Same-day or next-day delivery</li>
           <li>Nearest available driver assigned</li>

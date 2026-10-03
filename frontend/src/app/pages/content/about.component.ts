@@ -8,10 +8,10 @@ import { PageLayoutComponent } from '../../components/page-layout/page-layout.co
   standalone: true,
   imports: [CommonModule, RouterLink, PageLayoutComponent],
   template: `
-<app-page-layout title="About VAN DIRECT" subtitle="We make same-day parcel delivery accessible, transparent and reliable for every business and individual in Tunisia." eyebrow="Our story">
+<app-page-layout title="About VAN DIRECT" subtitle="We make same-day parcel delivery accessible, transparent and reliable for every business and individual in the Ottawa region." eyebrow="Our story">
   <div class="ab-section">
     <h2 class="ab-h2">Our mission</h2>
-    <p>VAN DIRECT was founded on a simple idea: parcel delivery should work the way a phone call does — fast, traceable, and always answered. We built a platform that connects senders directly with a network of vetted, independent drivers across Tunisian cities. Every booking generates a real-time GPS link so senders and recipients always know exactly where their parcel is.</p>
+    <p>VAN DIRECT was founded on a simple idea: parcel delivery should work the way a phone call does — fast, traceable, and always answered. We built a platform that connects senders directly with a network of vetted, independent drivers across the Ottawa–Gatineau region. Every booking generates a real-time GPS link so senders and recipients always know exactly where their parcel is.</p>
   </div>
   <div class="ab-values">
     <div *ngFor="let v of values" class="ab-val">

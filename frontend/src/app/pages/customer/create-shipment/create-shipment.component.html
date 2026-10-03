@@ -13,40 +13,28 @@
     </div>
 
     <div *ngIf="error" class="error-alert">{{ error }}</div>
+    <div *ngIf="warning" class="warning-alert">
+      <span class="material-icons" style="font-size:16px;vertical-align:middle">info_outline</span>
+      {{ warning }}
+    </div>
 
-    <!-- STEP 1 -->
+    <!-- STEP 1 — Addresses -->
     <div *ngIf="step === 1" class="step-panel">
-      <h3>Pickup & Recipient</h3>
+      <h3>Pickup address</h3>
+      <app-address-form
+        heading="Pickup contact & address"
+        [requireEmail]="true"
+        mapId="pickup-map"
+        (changed)="onPickupChange($event)">
+      </app-address-form>
 
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Pickup Address</mat-label>
-        <textarea matInput rows="2"
-                  [ngModel]="form.pickupAddress"
-                  (ngModelChange)="onPickupAddressChange($event)"
-                  name="pickupAddress" required></textarea>
-        <mat-hint *ngIf="form.pickupLat != null">Located ({{ form.pickupLat | number:'1.4-4' }}, {{ form.pickupLng | number:'1.4-4' }})</mat-hint>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Recipient Name</mat-label>
-        <input matInput [(ngModel)]="form.recipientName" name="recipientName" required />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Recipient Phone</mat-label>
-        <input matInput [(ngModel)]="form.recipientPhone" name="recipientPhone" required />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Drop-off Address</mat-label>
-        <textarea matInput rows="2"
-                  [ngModel]="form.dropoffAddress"
-                  (ngModelChange)="onDropoffAddressChange($event)"
-                  name="dropoffAddress" required></textarea>
-        <mat-hint *ngIf="form.dropoffLat != null">Located ({{ form.dropoffLat | number:'1.4-4' }}, {{ form.dropoffLng | number:'1.4-4' }})</mat-hint>
-      </mat-form-field>
-
-      <p *ngIf="geocoding" class="hint">Looking up addresses…</p>
+      <h3 style="margin-top:8px">Drop-off address</h3>
+      <app-address-form
+        heading="Recipient contact & address"
+        [requireEmail]="false"
+        mapId="dropoff-map"
+        (changed)="onDropoffChange($event)">
+      </app-address-form>
 
       <div class="actions">
         <a mat-stroked-button routerLink="/customer/dashboard">Cancel</a>
@@ -54,96 +42,117 @@
       </div>
     </div>
 
-    <!-- STEP 2 -->
+    <!-- STEP 2 — Parcels -->
     <div *ngIf="step === 2" class="step-panel">
       <h3>Parcels</h3>
+      <div [formGroup]="parcelsForm">
+        <div formArrayName="parcels">
+          <div *ngFor="let parcel of parcels; let i = index"
+               [formGroupName]="i" class="parcel-block">
+            <div class="parcel-header">
+              <strong>Parcel {{ i + 1 }}</strong>
+              <button mat-button color="warn" type="button"
+                      *ngIf="parcels.length > 1" (click)="removeParcel(i)">
+                <mat-icon>delete</mat-icon> Remove
+              </button>
+            </div>
 
-      <div *ngFor="let p of parcels; let i = index" class="parcel-block">
-        <div class="parcel-header">
-          <strong>Parcel {{ i + 1 }}</strong>
-          <button mat-button color="warn" type="button" *ngIf="parcels.length > 1" (click)="removeParcel(i)">
-            <mat-icon>delete</mat-icon> Remove
-          </button>
+            <div class="row-2">
+              <div class="vf-field">
+                <label class="vf-label" [for]="'w'+i">Weight (kg) <span class="vf-req">*</span></label>
+                <input [id]="'w'+i" class="vf-input" type="number" min="0.1" max="50" step="0.1"
+                       formControlName="weightKg"
+                       [attr.aria-invalid]="showErr(parcel.get('weightKg'))"
+                       [attr.aria-describedby]="'w-err'+i">
+                <span [id]="'w-err'+i" class="vf-error" *ngIf="showErr(parcel.get('weightKg'))">
+                  {{ getError(parcel.get('weightKg')) }}
+                </span>
+              </div>
+
+              <div class="vf-field">
+                <label class="vf-label" [for]="'sz'+i">Size <span class="vf-req">*</span></label>
+                <select [id]="'sz'+i" class="vf-input" formControlName="sizeCategory"
+                        [attr.aria-invalid]="showErr(parcel.get('sizeCategory'))"
+                        [attr.aria-describedby]="'sz-err'+i">
+                  <option value="SMALL">Small</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="LARGE">Large</option>
+                </select>
+                <span [id]="'sz-err'+i" class="vf-error" *ngIf="showErr(parcel.get('sizeCategory'))">
+                  {{ getError(parcel.get('sizeCategory')) }}
+                </span>
+              </div>
+            </div>
+
+            <div class="vf-field">
+              <label class="vf-label" [for]="'desc'+i">Description <span class="vf-req">*</span></label>
+              <input [id]="'desc'+i" class="vf-input" type="text" formControlName="description"
+                     maxlength="200" placeholder="Brief description of contents"
+                     [attr.aria-invalid]="showErr(parcel.get('description'))"
+                     [attr.aria-describedby]="'desc-err'+i">
+              <span [id]="'desc-err'+i" class="vf-error" *ngIf="showErr(parcel.get('description'))">
+                {{ getError(parcel.get('description')) }}
+              </span>
+            </div>
+
+            <div class="vf-field">
+              <label class="vf-label" [for]="'val'+i">Declared value (CAD, optional)</label>
+              <input [id]="'val'+i" class="vf-input" type="number" min="0" max="10000" step="0.01"
+                     formControlName="declaredValue"
+                     [attr.aria-invalid]="showErr(parcel.get('declaredValue'))"
+                     [attr.aria-describedby]="'val-err'+i">
+              <span [id]="'val-err'+i" class="vf-error" *ngIf="showErr(parcel.get('declaredValue'))">
+                {{ getError(parcel.get('declaredValue')) }}
+              </span>
+            </div>
+          </div>
         </div>
-
-        <div class="row-2">
-          <mat-form-field appearance="outline">
-            <mat-label>Weight (kg)</mat-label>
-            <input matInput type="number" min="0.1" step="0.1" [(ngModel)]="p.weightKg" [name]="'weight' + i" required />
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Size Category</mat-label>
-            <mat-select [(ngModel)]="p.sizeCategory" [name]="'size' + i" required>
-              <mat-option value="SMALL">Small (1x)</mat-option>
-              <mat-option value="MEDIUM">Medium (1.5x)</mat-option>
-              <mat-option value="LARGE">Large (2x)</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Description</mat-label>
-          <input matInput [(ngModel)]="p.description" [name]="'desc' + i" required />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Declared Value (optional)</mat-label>
-          <input matInput type="number" min="0" step="0.01" [(ngModel)]="p.declaredValue" [name]="'value' + i" />
-        </mat-form-field>
       </div>
 
       <button mat-stroked-button type="button" color="primary" (click)="addParcel()">
         <mat-icon>add</mat-icon> Add Another Parcel
       </button>
-
       <div class="actions">
         <button mat-stroked-button type="button" (click)="prevStep()">Back</button>
         <button mat-flat-button class="btn-red" type="button" (click)="nextStep()">Next</button>
       </div>
     </div>
 
-    <!-- STEP 3 -->
+    <!-- STEP 3 — Service -->
     <div *ngIf="step === 3" class="step-panel">
       <h3>Service Tier & Price Estimate</h3>
-
-      <mat-radio-group [(ngModel)]="form.serviceTier" name="serviceTier" class="tier-group"
+      <mat-radio-group [(ngModel)]="serviceTier" name="serviceTier" class="tier-group"
                        (ngModelChange)="onServiceTierChange()">
         <mat-radio-button value="STANDARD">STANDARD</mat-radio-button>
         <mat-radio-button value="EXPRESS">EXPRESS</mat-radio-button>
       </mat-radio-group>
-
       <div class="price-box">
         <div class="price-line" *ngIf="estimatedDistanceKm > 0">
-          <span>Distance</span>
-          <strong>{{ estimatedDistanceKm | number:'1.1-2' }} km</strong>
+          <span>Distance</span><strong>{{ estimatedDistanceKm | number:'1.1-2' }} km</strong>
         </div>
         <div class="price-total">
-          <span>Estimated Total</span>
-          <strong>€{{ estimatedTotal | number:'1.2-2' }}</strong>
+          <span>Estimated Total</span><strong>{{ estimatedTotal | cad }}</strong>
         </div>
-        <p class="hint">Price from backend (includes weight, size, distance, and service tier)</p>
+        <p class="hint">Includes weight, size, distance and service tier</p>
       </div>
-
       <div class="actions">
         <button mat-stroked-button type="button" (click)="prevStep()">Back</button>
         <button mat-flat-button class="btn-red" type="button" (click)="nextStep()">Next</button>
       </div>
     </div>
 
-    <!-- STEP 4 -->
+    <!-- STEP 4 — Confirm -->
     <div *ngIf="step === 4" class="step-panel">
       <h3>Confirm Shipment</h3>
-
       <div class="summary">
-        <p><strong>Pickup:</strong> {{ form.pickupAddress }}</p>
-        <p><strong>Recipient:</strong> {{ form.recipientName }} · {{ form.recipientPhone }}</p>
-        <p><strong>Drop-off:</strong> {{ form.dropoffAddress }}</p>
-        <p><strong>Service:</strong> {{ form.serviceTier }}</p>
+        <p><strong>Pickup:</strong> {{ pickupAddress.line1 }}, {{ pickupAddress.city }}, {{ pickupAddress.province }} {{ pickupAddress.postalCode }}</p>
+        <p><strong>Contact:</strong> {{ pickupAddress.contactName }} · {{ pickupAddress.phone }}</p>
+        <p><strong>Drop-off:</strong> {{ dropoffAddress.line1 }}, {{ dropoffAddress.city }}, {{ dropoffAddress.province }} {{ dropoffAddress.postalCode }}</p>
+        <p><strong>Recipient:</strong> {{ dropoffAddress.contactName }} · {{ dropoffAddress.phone }}</p>
+        <p><strong>Service:</strong> {{ serviceTier }}</p>
         <p><strong>Parcels:</strong> {{ parcels.length }}</p>
-        <p class="total"><strong>Total Price:</strong> €{{ estimatedTotal | number:'1.2-2' }}</p>
+        <p class="total"><strong>Total Price:</strong> {{ estimatedTotal | cad }}</p>
       </div>
-
       <div class="actions">
         <button mat-stroked-button type="button" (click)="prevStep()" [disabled]="loading">Back</button>
         <button mat-flat-button class="btn-red" type="button" (click)="confirm()" [disabled]="loading">
@@ -158,6 +167,10 @@
       <h3>Shipment Booked!</h3>
       <p>Your tracking number is:</p>
       <p class="tracking">{{ createdTrackingNumber }}</p>
+      <p *ngIf="warning" class="warning-note">
+        <mat-icon style="font-size:16px;vertical-align:middle">info</mat-icon>
+        {{ warning }}
+      </p>
       <button mat-flat-button class="btn-red" (click)="goToDashboard()">Go to My Shipments</button>
     </div>
   </mat-card>

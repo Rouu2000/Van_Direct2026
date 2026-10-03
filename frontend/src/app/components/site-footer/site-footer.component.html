@@ -10,9 +10,13 @@
       <div class="sf-nl-form" *ngIf="!newsletterDone()">
         <input class="sf-nl-input" type="email" placeholder="Your email address"
                [(ngModel)]="newsletterEmail" (keyup.enter)="subscribe()"
-               aria-label="Email address for newsletter">
-        <button class="btn btn-primary sf-nl-btn" (click)="subscribe()">Subscribe</button>
+               aria-label="Email address for newsletter"
+               [attr.aria-invalid]="!!newsletterError">
+        <button class="btn btn-primary sf-nl-btn" (click)="subscribe()" [disabled]="newsletterSubmitting">
+          {{ newsletterSubmitting ? 'Subscribing…' : 'Subscribe' }}
+        </button>
       </div>
+      <p *ngIf="newsletterError" class="sf-nl-error">{{ newsletterError }}</p>
       <p class="sf-nl-ok" *ngIf="newsletterDone()">
         <span class="sf-nl-check">✓</span> Thank you! You're subscribed.
         <em class="sf-nl-note">(Front-end only — no email is sent yet.)</em>
@@ -24,16 +28,8 @@
   <div class="sf-main">
     <div class="sf-brand-col">
       <!-- Logo -->
-      <a routerLink="/" class="sf-logo" aria-label="VAN DIRECT home">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <rect width="32" height="32" rx="8" fill="#C41E3A"/>
-          <path d="M5 21V14l7-5h8l7 5v7H5Z" fill="#fff" opacity=".9"/>
-          <circle cx="11" cy="22" r="3" fill="#fff"/>
-          <circle cx="21" cy="22" r="3" fill="#fff"/>
-        </svg>
-        <span class="sf-logo-text">VAN DIRECT</span>
-      </a>
-      <p class="sf-brand-tagline">Your parcel. Our promise.<br>Fast, reliable city delivery in Tunisia.</p>
+      <div class="sf-logo-wrap"><app-brand-logo size="sm" variant="badge-on-dark" link="/"></app-brand-logo><span class="sf-logo-text">VAN DIRECT</span></div>
+      <p class="sf-brand-tagline">Your parcel. Our promise.<br>Fast, reliable city delivery in Ottawa, ON.</p>
       <!-- Social icons -->
       <div class="sf-social" aria-label="Social media links">
         <a href="#" class="sf-social-btn" aria-label="Facebook" rel="noopener">

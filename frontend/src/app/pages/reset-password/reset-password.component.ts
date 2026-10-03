@@ -1,89 +1,53 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { BrandLogoComponent } from '../../components/brand-logo/brand-logo.component';
 import { AuthService } from '../../services/auth.service';
+import { passwordStrengthValidator, passwordsMatchValidator, getError, focusFirstInvalid } from '../../shared/validators';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterLink,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule
-  ],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, MatCardModule, MatButtonModule, BrandLogoComponent],
   templateUrl: './reset-password.component.html',
   styleUrl: './reset-password.component.css'
 })
 export class ResetPasswordComponent implements OnInit {
-  token: string = '';
-  newPassword: string = '';
-  confirmPassword: string = '';
-  hidePassword = true;
-  submitting = false;
-  errorMessage: string = '';
-  successMessage: string = '';
+  @ViewChild('formEl') formEl!: ElementRef<HTMLFormElement>;
+  form!: FormGroup;
+  token = ''; hidePassword = true; submitting = false;
+  serverError = ''; successMessage = '';
+  getError = getError;
 
   constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private authService: AuthService,
-    private cdr: ChangeDetectorRef
+    private fb: FormBuilder, private route: ActivatedRoute,
+    private router: Router, private authService: AuthService, private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    const tokenParam = this.route.snapshot.queryParamMap.get('token');
-    if (tokenParam) {
-      this.token = tokenParam;
-    }
+    this.token = this.route.snapshot.queryParamMap.get('token') || '';
+    this.form = this.fb.group({
+      newPassword:     ['', [Validators.required, passwordStrengthValidator()]],
+      confirmPassword: ['', [Validators.required]]
+    }, { validators: passwordsMatchValidator('newPassword', 'confirmPassword') });
   }
 
+  get newPassword()     { return this.form.get('newPassword')!; }
+  get confirmPassword() { return this.form.get('confirmPassword')!; }
+  showErr(c: ReturnType<FormGroup['get']>): boolean { return !!c && c.invalid && (c.touched || c.dirty); }
+  showMismatch(): boolean { return !!this.form.errors?.['passwordsMismatch'] && (this.confirmPassword.touched || this.confirmPassword.dirty); }
+
   onSubmit(): void {
-    this.errorMessage = '';
-    this.successMessage = '';
-
-    if (!this.token || !this.token.trim()) {
-      this.errorMessage = 'Reset token is required.';
-      return;
-    }
-
-    if (!this.newPassword || this.newPassword.length < 6) {
-      this.errorMessage = 'Password must be at least 6 characters.';
-      return;
-    }
-
-    if (this.newPassword !== this.confirmPassword) {
-      this.errorMessage = 'Passwords do not match.';
-      return;
-    }
-
-    this.submitting = true;
-    this.cdr.markForCheck();
-
-    this.authService.confirmPasswordReset({
-      token: this.token.trim(),
-      newPassword: this.newPassword
-    }).subscribe({
-      next: (res: any) => {
-        this.submitting = false;
-        this.successMessage = res?.message || 'Password has been reset successfully. You can now log in.';
-        this.cdr.markForCheck();
-      },
-      error: (err: any) => {
-        this.submitting = false;
-        this.errorMessage = err.error?.message || 'Failed to reset password. The link may be expired or invalid.';
-        this.cdr.markForCheck();
-      }
+    this.form.markAllAsTouched();
+    if (this.form.invalid) { focusFirstInvalid(this.formEl?.nativeElement); return; }
+    if (!this.token) { this.serverError = 'Reset token is missing. Please use the link from your email.'; return; }
+    this.serverError = ''; this.submitting = true; this.cdr.markForCheck();
+    this.authService.confirmPasswordReset({ token: this.token, newPassword: this.newPassword.value }).subscribe({
+      next: (res: any) => { this.submitting = false; this.successMessage = res?.message || 'Password reset successfully.'; this.cdr.markForCheck(); },
+      error: (err: any) => { this.submitting = false; this.serverError = err.error?.message || 'Reset failed — link may be expired.'; this.cdr.markForCheck(); }
     });
   }
 }

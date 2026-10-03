@@ -6,6 +6,7 @@ import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/ro
 import { FormsModule } from '@angular/forms';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
+import { BrandLogoComponent } from '../brand-logo/brand-logo.component';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService, AppNotification } from '../../services/notification.service';
 
@@ -24,7 +25,7 @@ export interface MenuPanel {
 @Component({
   selector: 'app-site-header',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, FormsModule],
+  imports: [CommonModule, RouterLink, RouterLinkActive, FormsModule, BrandLogoComponent],
   templateUrl: './site-header.component.html',
   styleUrl: './site-header.component.css'
 })
@@ -49,6 +50,10 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
   readonly isDriver     = computed(() => this.auth.driver());
   readonly isAdmin      = computed(() => this.auth.admin());
   readonly displayName  = computed(() => this.auth.userName() || this.auth.currentUser()?.email || 'Account');
+  readonly firstName    = computed(() => {
+    const name = this.auth.userName() || '';
+    return name.split(' ')[0] || 'Account';
+  });
   readonly unreadCount  = computed(() => this.notifSvc.unreadCount());
   readonly notifications= computed(() => this.notifSvc.notifications());
 
@@ -261,6 +266,16 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
       this.router.navigate(['/track'], { queryParams: { tn: this.trackQuery.trim() } });
       this.trackQuery = '';
     }
+  }
+
+  /** Keyboard navigation inside the account dropdown (arrow keys cycle items, Escape closes) */
+  onMenuKey(e: KeyboardEvent): void {
+    const panel = (e.currentTarget as HTMLElement);
+    const items = Array.from(panel.querySelectorAll<HTMLElement>('[role="menuitem"]'));
+    const idx   = items.indexOf(document.activeElement as HTMLElement);
+    if (e.key === 'Escape') { this.closeAll(); return; }
+    if (e.key === 'ArrowDown') { e.preventDefault(); items[(idx + 1) % items.length]?.focus(); }
+    if (e.key === 'ArrowUp')   { e.preventDefault(); items[(idx - 1 + items.length) % items.length]?.focus(); }
   }
 
   // ── Mobile drawer ──────────────────────────────────────────

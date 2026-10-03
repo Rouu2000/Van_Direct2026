@@ -8,6 +8,7 @@ import {
   ViewChild
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CadPipe } from '../../shared/cad.pipe';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -39,7 +40,7 @@ L.Marker.prototype.options.icon = DefaultIcon;
 @Component({
   selector: 'app-tracking',
   standalone: true,
-  imports: [
+  imports: [CadPipe, 
     CommonModule,
     FormsModule,
     RouterModule,
@@ -192,8 +193,8 @@ export class TrackingComponent implements OnInit, OnDestroy, AfterViewChecked {
       return;
     }
 
-    const pickupLat = this.shipment?.pickupLat ?? 48.8566;
-    const pickupLng = this.shipment?.pickupLng ?? 2.3522;
+    const pickupLat = this.shipment?.pickupLat ?? 45.4215;
+    const pickupLng = this.shipment?.pickupLng ?? -75.6972;
     const dropoffLat = this.shipment?.dropoffLat;
     const dropoffLng = this.shipment?.dropoffLng;
 

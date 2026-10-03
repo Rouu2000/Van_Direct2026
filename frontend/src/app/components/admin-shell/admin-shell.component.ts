@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService, AppNotification } from '../../services/notification.service';
+import { BrandLogoComponent } from '../brand-logo/brand-logo.component';
 
 interface NavItem {
   label: string;
@@ -13,7 +14,7 @@ interface NavItem {
 @Component({
   selector: 'app-admin-shell',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, BrandLogoComponent],
   templateUrl: './admin-shell.component.html',
   styleUrl: './admin-shell.component.css'
 })

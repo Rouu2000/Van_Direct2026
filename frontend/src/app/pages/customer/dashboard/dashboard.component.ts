@@ -1,5 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CadPipe } from '../../../shared/cad.pipe';
 import { RouterModule, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
@@ -12,7 +13,7 @@ const STATUS_STEP: Record<string, number> = {
 @Component({
   selector: 'app-customer-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterLink, FormsModule],
+  imports: [CadPipe, CommonModule, RouterModule, RouterLink, FormsModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })

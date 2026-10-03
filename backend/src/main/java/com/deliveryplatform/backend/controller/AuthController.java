@@ -4,6 +4,8 @@ import com.deliveryplatform.backend.config.JwtUtil;
 import com.deliveryplatform.backend.model.User;
 import com.deliveryplatform.backend.service.PasswordResetService;
 import com.deliveryplatform.backend.service.UserService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +29,7 @@ public class AuthController {
     private PasswordResetService passwordResetService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegistrationRequest request) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegistrationRequest request) {
         try {
             User user = new User();
             user.setName(request.getName());
@@ -58,7 +60,7 @@ public class AuthController {
     }
 
     @PostMapping("/register-driver")
-    public ResponseEntity<?> registerDriver(@RequestBody RegistrationRequest request) {
+    public ResponseEntity<?> registerDriver(@Valid @RequestBody RegistrationRequest request) {
         try {
             User user = new User();
             user.setName(request.getName());
@@ -131,12 +133,29 @@ public class AuthController {
     }
 
     public static class RegistrationRequest {
+        @NotBlank(message = "Name is required")
+        @Size(min = 2, max = 60, message = "Name must be 2–60 characters")
+        @Pattern(regexp = "^[\\p{L}\\s'\\-]+$", message = "Name contains invalid characters")
         private String name;
+
+        @NotBlank(message = "Email is required")
+        @Email(message = "Email format is invalid")
         private String email;
+
+        @NotBlank(message = "Password is required")
+        @Size(min = 8, message = "Password must be at least 8 characters")
+        @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$",
+                 message = "Password must contain at least one letter and one digit")
         private String passwordHash;
+
+        @Pattern(regexp = "^(\\+?1[-.\\s]?)?\\(?[2-9]\\d{2}\\)?[-.\\s]?\\d{3}[-.\\s]?\\d{4}$",
+                 message = "Enter a valid North American phone number")
         private String phone;
         private String role;
         private String vehicleType;
+
+        @Size(min = 5, max = 20, message = "Licence number must be 5–20 characters")
+        @Pattern(regexp = "^[A-Za-z0-9\\-]+$", message = "Licence number must be alphanumeric")
         private String licenseNumber;
 
         public String getName() {

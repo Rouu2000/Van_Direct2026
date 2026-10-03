@@ -18,6 +18,16 @@ export class DriverService {
     return this.http.get(`${this.driversUrl}/${driverId}/status`);
   }
 
+  getDeliveryHistory(driverId: string, params: {
+    status?: string; from?: string; to?: string; page?: number; size?: number
+  } = {}): Observable<any> {
+    let query = `page=${params.page ?? 0}&size=${params.size ?? 10}`;
+    if (params.status) query += `&status=${params.status}`;
+    if (params.from)   query += `&from=${params.from}`;
+    if (params.to)     query += `&to=${params.to}`;
+    return this.http.get(`${this.driversUrl}/${driverId}/deliveries/history?${query}`);
+  }
+
   getDeliveries(driverId: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.driversUrl}/${driverId}/deliveries`);
   }

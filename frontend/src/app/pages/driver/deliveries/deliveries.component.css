@@ -84,3 +84,65 @@
 .modal-row strong { color: var(--text); }
 .icon-close { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--bg-2); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
 .icon-close:hover { background: var(--border); }
+
+/* ── Tabs ──────────────────────────────────────────────────── */
+.drv-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
+.drv-tab {
+  display: flex; align-items: center; gap: 6px;
+  padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent;
+  margin-bottom: -2px; font-size: .875rem; font-weight: 600; color: var(--text-muted);
+  cursor: pointer; font-family: var(--font); transition: color 150ms;
+}
+.drv-tab:hover { color: var(--text); }
+.drv-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+.drv-tab-badge {
+  min-width: 18px; height: 18px; background: var(--brand); color: #fff;
+  border-radius: var(--radius-pill); font-size: .65rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; padding: 0 4px;
+}
+
+/* ── Offer expiry ──────────────────────────────────────────── */
+.drv-offer-expiry {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .78rem; color: var(--warning); font-weight: 600;
+  background: var(--warning-bg); padding: 6px 12px; border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+
+/* ── History summary ───────────────────────────────────────── */
+.hist-summary {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 16px;
+}
+.hist-stat {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 16px; text-align: center;
+}
+.hist-stat-val { display: block; font-size: 1.6rem; font-weight: 800; color: var(--navy); line-height: 1; }
+.hist-stat-lbl { display: block; font-size: .78rem; color: var(--text-muted); margin-top: 4px; }
+
+/* ── History filters ───────────────────────────────────────── */
+.hist-filters {
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 16px;
+}
+
+/* ── History list ──────────────────────────────────────────── */
+.hist-list {
+  display: flex; flex-direction: column; gap: 0;
+  border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;
+}
+.hist-item {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 14px 16px; border-bottom: 1px solid var(--border); background: var(--surface);
+  transition: background 120ms;
+}
+.hist-item:last-child { border-bottom: none; }
+.hist-item:hover { background: var(--surface-2); }
+.hist-item-left { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.hist-item-route {
+  display: flex; align-items: center; gap: 4px; font-size: .8rem; color: var(--text-muted);
+  overflow: hidden;
+}
+.hist-addr { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; }
+.hist-item-meta {
+  display: flex; gap: 16px; font-size: .78rem; color: var(--text-muted); flex-wrap: wrap;
+}

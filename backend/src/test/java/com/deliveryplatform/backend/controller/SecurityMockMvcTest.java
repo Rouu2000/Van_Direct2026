@@ -65,6 +65,12 @@ public class SecurityMockMvcTest {
     @MockitoBean
     private UserRepository userRepository;
 
+    @MockitoBean
+    private com.deliveryplatform.backend.repository.ShipmentRepository shipmentRepository;
+
+    @MockitoBean
+    private com.deliveryplatform.backend.service.geocoding.GeocodingService geocodingService;
+
     private UUID customerId;
     private UUID driverId;
     private UUID adminId;
@@ -108,6 +114,10 @@ public class SecurityMockMvcTest {
         when(userRepository.findByEmail("customer@example.com")).thenReturn(Optional.of(customer));
         when(userRepository.findByEmail("driver@example.com")).thenReturn(Optional.of(driver));
         when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.of(admin));
+
+        // Stub history query so history endpoint returns empty page rather than NPE
+        when(shipmentRepository.findDriverHistory(any(), any(), any(), any(), any()))
+                .thenReturn(org.springframework.data.domain.Page.empty());
     }
 
     // 1. Unauthenticated access returns 401
@@ -292,12 +302,69 @@ public class SecurityMockMvcTest {
     void estimatePrice_isPublicNoAuthRequired() throws Exception {
         // Should be accessible without a token (returns 200 or 400 on bad input, never 401)
         String body = """
-            {"serviceTier":"STANDARD","pickupLat":36.8,"pickupLng":10.18,
-             "dropoffLat":36.85,"dropoffLng":10.20,
+            {"serviceTier":"STANDARD","pickupLat":45.4215,"pickupLng":-75.6972,
+             "dropoffLat":45.4215,"dropoffLng":-75.6500,
              "parcels":[{"weightKg":2,"sizeCategory":"SMALL"}]}""";
         mockMvc.perform(post("/api/shipments/estimate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().is2xxSuccessful());
+    }
+
+    @Test
+    void driverHistory_driverCanOnlySeeOwnHistory() throws Exception {
+        // Another driver cannot read a different driver's history
+        mockMvc.perform(get("/api/drivers/" + driverId + "/deliveries/history")
+                        .header("Authorization", "Bearer " + customerToken))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void driverHistory_adminCanSeeAnyDriverHistory() throws Exception {
+        mockMvc.perform(get("/api/drivers/" + driverId + "/deliveries/history")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk());
+    }
+
+    // ── Parcel validation ────────────────────────────────────────────
+    @Test
+    void createShipment_rejectsParcelWeightOver50() throws Exception {
+        String body = """
+            {"customerId":"00000000-0000-0000-0000-000000000001",
+             "pickupAddress":"123 Test St","dropoffAddress":"456 Test Ave",
+             "serviceTier":"STANDARD","recipientName":"Jane","recipientPhone":"6135550100",
+             "parcels":[{"weightKg":99,"sizeCategory":"LARGE","description":"Heavy box"}]}""";
+        mockMvc.perform(post("/api/shipments")
+                .header("Authorization", "Bearer " + customerToken)
+                .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createShipment_rejectsParcelDescriptionOver200() throws Exception {
+        String longDesc = "x".repeat(201);
+        String body = """
+            {"customerId":"00000000-0000-0000-0000-000000000001",
+             "pickupAddress":"123 Test St","dropoffAddress":"456 Test Ave",
+             "serviceTier":"STANDARD","recipientName":"Jane","recipientPhone":"6135550100",
+             "parcels":[{"weightKg":1.0,"sizeCategory":"SMALL","description":"%s"}]}"""
+                .formatted(longDesc);
+        mockMvc.perform(post("/api/shipments")
+                .header("Authorization", "Bearer " + customerToken)
+                .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createShipment_rejectsZeroWeight() throws Exception {
+        String body = """
+            {"customerId":"00000000-0000-0000-0000-000000000001",
+             "pickupAddress":"123 Test St","dropoffAddress":"456 Test Ave",
+             "serviceTier":"STANDARD","recipientName":"Jane","recipientPhone":"6135550100",
+             "parcels":[{"weightKg":0,"sizeCategory":"SMALL","description":"Light"}]}""";
+        mockMvc.perform(post("/api/shipments")
+                .header("Authorization", "Bearer " + customerToken)
+                .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest());
     }
 }

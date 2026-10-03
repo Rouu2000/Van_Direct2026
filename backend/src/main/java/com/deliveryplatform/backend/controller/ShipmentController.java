@@ -10,7 +10,12 @@ import com.deliveryplatform.backend.service.DistanceService;
 import com.deliveryplatform.backend.service.DriverLocationService;
 import com.deliveryplatform.backend.service.ParcelService;
 import com.deliveryplatform.backend.service.ShipmentService;
+import com.deliveryplatform.backend.service.geocoding.GeocodingResult;
+import com.deliveryplatform.backend.service.geocoding.GeocodingService;
+import com.deliveryplatform.backend.service.geocoding.NominatimGeocodingProvider;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -22,6 +27,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -38,6 +44,7 @@ public class ShipmentController {
     private final DriverLocationService driverLocationService;
     private final UserRepository userRepository;
     private final DistanceService distanceService;
+    private final GeocodingService geocodingService;
 
     public ShipmentController(
             ShipmentService shipmentService,
@@ -46,7 +53,8 @@ public class ShipmentController {
             AssignmentService assignmentService,
             DriverLocationService driverLocationService,
             UserRepository userRepository,
-            DistanceService distanceService
+            DistanceService distanceService,
+            GeocodingService geocodingService
     ) {
         this.shipmentService = shipmentService;
         this.parcelService = parcelService;
@@ -55,12 +63,13 @@ public class ShipmentController {
         this.driverLocationService = driverLocationService;
         this.userRepository = userRepository;
         this.distanceService = distanceService;
+        this.geocodingService = geocodingService;
     }
 
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<?> createShipment(
-            @RequestBody CreateShipmentRequest request,
+            @Valid @RequestBody CreateShipmentRequest request,
             HttpServletRequest httpRequest
     ) {
         try {
@@ -70,15 +79,84 @@ public class ShipmentController {
             }
             Shipment shipment = new Shipment();
             shipment.setCustomerId(request.getCustomerId());
-            shipment.setPickupAddress(request.getPickupAddress());
-            shipment.setPickupLat(request.getPickupLat());
-            shipment.setPickupLng(request.getPickupLng());
             shipment.setRecipientName(request.getRecipientName());
             shipment.setRecipientPhone(request.getRecipientPhone());
-            shipment.setDropoffAddress(request.getDropoffAddress());
-            shipment.setDropoffLat(request.getDropoffLat());
-            shipment.setDropoffLng(request.getDropoffLng());
             shipment.setServiceTier(Shipment.ServiceTier.valueOf(request.getServiceTier().toUpperCase()));
+
+            // ── Pickup address ────────────────────────────────────────────
+            boolean hasStructuredPickup = request.getPickupLine1() != null && !request.getPickupLine1().isBlank();
+            String geoWarning = null;
+
+            if (hasStructuredPickup) {
+                // Store structured fields
+                shipment.setPickupContactName(request.getPickupContactName());
+                shipment.setPickupCompany(request.getPickupCompany());
+                shipment.setPickupPhone(normalizePhone(request.getPickupPhone()));
+                shipment.setPickupEmail(request.getPickupEmail());
+                shipment.setPickupLine1(request.getPickupLine1());
+                shipment.setPickupLine2(request.getPickupLine2());
+                shipment.setPickupPostalCode(NominatimGeocodingProvider.normalizePostalCode(request.getPickupPostalCode()));
+                shipment.setPickupProvince(request.getPickupProvince());
+                shipment.setPickupCity(request.getPickupCity());
+                shipment.setPickupResidential(Boolean.TRUE.equals(request.getPickupResidential()));
+                // Compose display string
+                shipment.setPickupAddress(Shipment.composeAddress(
+                        request.getPickupLine1(), request.getPickupLine2(),
+                        request.getPickupCity(), request.getPickupProvince(),
+                        shipment.getPickupPostalCode()));
+                // Geocode
+                Optional<GeocodingResult> geo = geocodingService.geocode(
+                        request.getPickupLine1(), request.getPickupCity(),
+                        request.getPickupProvince(), request.getPickupPostalCode());
+                if (geo.isPresent()) {
+                    shipment.setPickupLat(geo.get().getLat());
+                    shipment.setPickupLng(geo.get().getLng());
+                    shipment.setPickupGeoAccuracy(GeocodingService.toShipmentAccuracy(geo.get().getAccuracy()));
+                } else {
+                    geoWarning = "Pickup location could not be geocoded — map pin will be approximate.";
+                    log.warn("Pickup geocoding failed for: {}", shipment.getPickupAddress());
+                }
+            } else {
+                // Legacy: accept raw address + lat/lng from the request
+                shipment.setPickupAddress(request.getPickupAddress());
+                shipment.setPickupLat(request.getPickupLat());
+                shipment.setPickupLng(request.getPickupLng());
+            }
+
+            // ── Drop-off address ──────────────────────────────────────────
+            boolean hasStructuredDropoff = request.getDropoffLine1() != null && !request.getDropoffLine1().isBlank();
+
+            if (hasStructuredDropoff) {
+                shipment.setDropoffContactName(request.getDropoffContactName());
+                shipment.setDropoffCompany(request.getDropoffCompany());
+                shipment.setDropoffPhone(normalizePhone(request.getDropoffPhone()));
+                shipment.setDropoffEmail(request.getDropoffEmail());
+                shipment.setDropoffLine1(request.getDropoffLine1());
+                shipment.setDropoffLine2(request.getDropoffLine2());
+                shipment.setDropoffPostalCode(NominatimGeocodingProvider.normalizePostalCode(request.getDropoffPostalCode()));
+                shipment.setDropoffProvince(request.getDropoffProvince());
+                shipment.setDropoffCity(request.getDropoffCity());
+                shipment.setDropoffResidential(Boolean.TRUE.equals(request.getDropoffResidential()));
+                shipment.setDropoffAddress(Shipment.composeAddress(
+                        request.getDropoffLine1(), request.getDropoffLine2(),
+                        request.getDropoffCity(), request.getDropoffProvince(),
+                        shipment.getDropoffPostalCode()));
+                Optional<GeocodingResult> geo = geocodingService.geocode(
+                        request.getDropoffLine1(), request.getDropoffCity(),
+                        request.getDropoffProvince(), request.getDropoffPostalCode());
+                if (geo.isPresent()) {
+                    shipment.setDropoffLat(geo.get().getLat());
+                    shipment.setDropoffLng(geo.get().getLng());
+                    shipment.setDropoffGeoAccuracy(GeocodingService.toShipmentAccuracy(geo.get().getAccuracy()));
+                } else {
+                    if (geoWarning == null) geoWarning = "Drop-off location could not be geocoded — map pin will be approximate.";
+                    log.warn("Dropoff geocoding failed for: {}", shipment.getDropoffAddress());
+                }
+            } else {
+                shipment.setDropoffAddress(request.getDropoffAddress());
+                shipment.setDropoffLat(request.getDropoffLat());
+                shipment.setDropoffLng(request.getDropoffLng());
+            }
 
             List<Parcel> parcels = request.getParcels().stream().map(p -> {
                 Parcel parcel = new Parcel();
@@ -90,7 +168,6 @@ public class ShipmentController {
             }).toList();
 
             Shipment created = shipmentService.createShipment(shipment, parcels);
-            // Auto-assign is best-effort; if it fails (e.g. no Redis) the scheduler will retry
             try {
                 created = assignmentService.autoAssign(created);
             } catch (Exception assignEx) {
@@ -102,10 +179,19 @@ public class ShipmentController {
             Map<String, Object> response = new HashMap<>();
             response.put("shipment", created);
             response.put("parcels", savedParcels);
+            if (geoWarning != null) response.put("warning", geoWarning);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
         }
+    }
+
+    /** Normalize a phone string to 10 digits, return original if it doesn't parse. */
+    private static String normalizePhone(String raw) {
+        if (raw == null) return null;
+        String digits = raw.replaceAll("\\D", "");
+        if (digits.length() == 11 && digits.startsWith("1")) digits = digits.substring(1);
+        return digits.length() == 10 ? digits : raw;
     }
 
     @PostMapping("/estimate")
@@ -509,6 +595,7 @@ public class ShipmentController {
 
     public static class CreateShipmentRequest {
         private UUID customerId;
+        // Legacy free-text (still accepted for backward compat and tests)
         private String pickupAddress;
         private Double pickupLat;
         private Double pickupLng;
@@ -518,30 +605,96 @@ public class ShipmentController {
         private Double dropoffLat;
         private Double dropoffLng;
         private String serviceTier;
-        private List<ParcelRequest> parcels;
+        @Valid
+        @NotEmpty(message = "At least one parcel is required")
+        private java.util.List<ParcelRequest> parcels;
+
+        // Structured pickup
+        private String pickupContactName;
+        private String pickupCompany;
+        private String pickupPhone;
+        private String pickupEmail;
+        private String pickupLine1;
+        private String pickupLine2;
+        private String pickupPostalCode;
+        private String pickupProvince;
+        private String pickupCity;
+        private Boolean pickupResidential;
+
+        // Structured drop-off
+        private String dropoffContactName;
+        private String dropoffCompany;
+        private String dropoffPhone;
+        private String dropoffEmail;
+        private String dropoffLine1;
+        private String dropoffLine2;
+        private String dropoffPostalCode;
+        private String dropoffProvince;
+        private String dropoffCity;
+        private Boolean dropoffResidential;
 
         public UUID getCustomerId() { return customerId; }
-        public void setCustomerId(UUID customerId) { this.customerId = customerId; }
+        public void setCustomerId(UUID v) { this.customerId = v; }
         public String getPickupAddress() { return pickupAddress; }
-        public void setPickupAddress(String pickupAddress) { this.pickupAddress = pickupAddress; }
+        public void setPickupAddress(String v) { this.pickupAddress = v; }
         public Double getPickupLat() { return pickupLat; }
-        public void setPickupLat(Double pickupLat) { this.pickupLat = pickupLat; }
+        public void setPickupLat(Double v) { this.pickupLat = v; }
         public Double getPickupLng() { return pickupLng; }
-        public void setPickupLng(Double pickupLng) { this.pickupLng = pickupLng; }
+        public void setPickupLng(Double v) { this.pickupLng = v; }
         public String getRecipientName() { return recipientName; }
-        public void setRecipientName(String recipientName) { this.recipientName = recipientName; }
+        public void setRecipientName(String v) { this.recipientName = v; }
         public String getRecipientPhone() { return recipientPhone; }
-        public void setRecipientPhone(String recipientPhone) { this.recipientPhone = recipientPhone; }
+        public void setRecipientPhone(String v) { this.recipientPhone = v; }
         public String getDropoffAddress() { return dropoffAddress; }
-        public void setDropoffAddress(String dropoffAddress) { this.dropoffAddress = dropoffAddress; }
+        public void setDropoffAddress(String v) { this.dropoffAddress = v; }
         public Double getDropoffLat() { return dropoffLat; }
-        public void setDropoffLat(Double dropoffLat) { this.dropoffLat = dropoffLat; }
+        public void setDropoffLat(Double v) { this.dropoffLat = v; }
         public Double getDropoffLng() { return dropoffLng; }
-        public void setDropoffLng(Double dropoffLng) { this.dropoffLng = dropoffLng; }
+        public void setDropoffLng(Double v) { this.dropoffLng = v; }
         public String getServiceTier() { return serviceTier; }
-        public void setServiceTier(String serviceTier) { this.serviceTier = serviceTier; }
-        public List<ParcelRequest> getParcels() { return parcels; }
-        public void setParcels(List<ParcelRequest> parcels) { this.parcels = parcels; }
+        public void setServiceTier(String v) { this.serviceTier = v; }
+        public java.util.List<ParcelRequest> getParcels() { return parcels; }
+        public void setParcels(java.util.List<ParcelRequest> v) { this.parcels = v; }
+        public String getPickupContactName() { return pickupContactName; }
+        public void setPickupContactName(String v) { this.pickupContactName = v; }
+        public String getPickupCompany() { return pickupCompany; }
+        public void setPickupCompany(String v) { this.pickupCompany = v; }
+        public String getPickupPhone() { return pickupPhone; }
+        public void setPickupPhone(String v) { this.pickupPhone = v; }
+        public String getPickupEmail() { return pickupEmail; }
+        public void setPickupEmail(String v) { this.pickupEmail = v; }
+        public String getPickupLine1() { return pickupLine1; }
+        public void setPickupLine1(String v) { this.pickupLine1 = v; }
+        public String getPickupLine2() { return pickupLine2; }
+        public void setPickupLine2(String v) { this.pickupLine2 = v; }
+        public String getPickupPostalCode() { return pickupPostalCode; }
+        public void setPickupPostalCode(String v) { this.pickupPostalCode = v; }
+        public String getPickupProvince() { return pickupProvince; }
+        public void setPickupProvince(String v) { this.pickupProvince = v; }
+        public String getPickupCity() { return pickupCity; }
+        public void setPickupCity(String v) { this.pickupCity = v; }
+        public Boolean getPickupResidential() { return pickupResidential; }
+        public void setPickupResidential(Boolean v) { this.pickupResidential = v; }
+        public String getDropoffContactName() { return dropoffContactName; }
+        public void setDropoffContactName(String v) { this.dropoffContactName = v; }
+        public String getDropoffCompany() { return dropoffCompany; }
+        public void setDropoffCompany(String v) { this.dropoffCompany = v; }
+        public String getDropoffPhone() { return dropoffPhone; }
+        public void setDropoffPhone(String v) { this.dropoffPhone = v; }
+        public String getDropoffEmail() { return dropoffEmail; }
+        public void setDropoffEmail(String v) { this.dropoffEmail = v; }
+        public String getDropoffLine1() { return dropoffLine1; }
+        public void setDropoffLine1(String v) { this.dropoffLine1 = v; }
+        public String getDropoffLine2() { return dropoffLine2; }
+        public void setDropoffLine2(String v) { this.dropoffLine2 = v; }
+        public String getDropoffPostalCode() { return dropoffPostalCode; }
+        public void setDropoffPostalCode(String v) { this.dropoffPostalCode = v; }
+        public String getDropoffProvince() { return dropoffProvince; }
+        public void setDropoffProvince(String v) { this.dropoffProvince = v; }
+        public String getDropoffCity() { return dropoffCity; }
+        public void setDropoffCity(String v) { this.dropoffCity = v; }
+        public Boolean getDropoffResidential() { return dropoffResidential; }
+        public void setDropoffResidential(Boolean v) { this.dropoffResidential = v; }
     }
 
     public static class EstimateRequest {
@@ -567,9 +720,21 @@ public class ShipmentController {
     }
 
     public static class ParcelRequest {
+        @NotNull(message = "Weight is required")
+        @DecimalMin(value = "0.1", message = "Weight must be at least 0.1 kg")
+        @DecimalMax(value = "50.0", message = "Weight must be at most 50 kg")
         private BigDecimal weightKg;
+
+        @NotBlank(message = "Size category is required")
+        @Pattern(regexp = "SMALL|MEDIUM|LARGE", message = "Size must be SMALL, MEDIUM or LARGE")
         private String sizeCategory;
+
+        @NotBlank(message = "Description is required")
+        @Size(max = 200, message = "Description must be at most 200 characters")
         private String description;
+
+        @DecimalMin(value = "0.0", message = "Declared value must be 0 or more")
+        @DecimalMax(value = "10000.0", message = "Declared value must be at most 10,000 CAD")
         private BigDecimal declaredValue;
 
         public BigDecimal getWeightKg() { return weightKg; }

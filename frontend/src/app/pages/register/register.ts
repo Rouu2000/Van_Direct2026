@@ -1,112 +1,121 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { BrandLogoComponent } from '../../components/brand-logo/brand-logo.component';
 import { AuthService } from '../../services/auth.service';
+import {
+  emailValidator, phoneValidator, passwordStrengthValidator, nameValidator,
+  licenceValidator, passwordsMatchValidator, getError, focusFirstInvalid
+} from '../../shared/validators';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterLink,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatSelectModule,
-    MatButtonToggleModule
-  ],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, MatCardModule,
+            MatButtonModule, MatButtonToggleModule, BrandLogoComponent],
   templateUrl: './register.html',
   styleUrl: './register.css'
 })
-export class RegisterComponent {
-  isDriverMode: boolean = false;
-  showPendingMessage: boolean = false;
-  hidePassword = true;
-  submitting = false;
+export class RegisterComponent implements OnInit {
+  @ViewChild('formEl') formEl!: ElementRef<HTMLFormElement>;
 
-  user = {
-    name: '',
-    email: '',
-    passwordHash: '',
-    phone: '',
-    role: 'CUSTOMER',
-    vehicleType: '',
-    licenseNumber: ''
-  };
-
-  errorMessage: string = '';
-  successMessage: string = '';
+  isDriverMode    = false;
+  showPendingMessage = false;
+  hidePassword    = true;
+  submitting      = false;
+  serverError     = '';
+  successMessage  = '';
+  fieldErrors: Record<string, string> = {};
+  form!: FormGroup;
+  getError = getError;
 
   constructor(
+    private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
 
+  ngOnInit(): void { this.buildForm(); }
+
+  private buildForm(): void {
+    this.form = this.fb.group({
+      name:            ['', [Validators.required, nameValidator()]],
+      email:           ['', [Validators.required, emailValidator()]],
+      passwordHash:    ['', [Validators.required, passwordStrengthValidator()]],
+      confirmPassword: ['', [Validators.required]],
+      phone:           ['', [phoneValidator()]],
+      // driver-only
+      vehicleType:     [''],
+      licenseNumber:   ['']
+    }, { validators: passwordsMatchValidator('passwordHash', 'confirmPassword') });
+  }
+
+  get name()            { return this.form.get('name')!; }
+  get email()           { return this.form.get('email')!; }
+  get passwordHash()    { return this.form.get('passwordHash')!; }
+  get confirmPassword() { return this.form.get('confirmPassword')!; }
+  get phone()           { return this.form.get('phone')!; }
+  get vehicleType()     { return this.form.get('vehicleType')!; }
+  get licenseNumber()   { return this.form.get('licenseNumber')!; }
+
+  showErr(ctrl: ReturnType<FormGroup['get']>): boolean {
+    return !!ctrl && ctrl.invalid && (ctrl.touched || ctrl.dirty);
+  }
+  showGroupErr(key: string): boolean {
+    return !!this.form.errors?.[key] && (this.confirmPassword.touched || this.confirmPassword.dirty);
+  }
+
   toggleMode(mode: string): void {
     this.isDriverMode = mode === 'driver';
-    this.user.role = this.isDriverMode ? 'DRIVER' : 'CUSTOMER';
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.showPendingMessage = false;
+    if (this.isDriverMode) {
+      this.vehicleType.setValidators([Validators.required]);
+      this.licenseNumber.setValidators([Validators.required, licenceValidator()]);
+    } else {
+      this.vehicleType.clearValidators();
+      this.licenseNumber.clearValidators();
+    }
+    this.vehicleType.updateValueAndValidity();
+    this.licenseNumber.updateValueAndValidity();
+    this.serverError = ''; this.fieldErrors = {};
     this.cdr.markForCheck();
   }
 
+  serverFieldError(field: string): string { return this.fieldErrors[field] || ''; }
+
   onSubmit(): void {
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.showPendingMessage = false;
-    this.submitting = true;
+    this.form.markAllAsTouched();
+    if (this.form.invalid) { focusFirstInvalid(this.formEl?.nativeElement); return; }
+
+    this.serverError = ''; this.fieldErrors = {}; this.submitting = true;
     this.cdr.markForCheck();
 
-    if (this.isDriverMode) {
-      this.user.role = 'DRIVER';
-      this.authService.registerDriver(this.user).subscribe({
-        next: () => {
-          this.submitting = false;
-          this.showPendingMessage = true;
-          this.cdr.markForCheck();
-        },
-        error: (err) => {
-          console.error('Driver registration error:', err);
-          this.submitting = false;
-          this.errorMessage = err.error?.message || 'Driver registration failed. Please try again.';
-          this.cdr.markForCheck();
-        }
-      });
-      return;
-    }
+    const v = this.form.value;
+    const payload = { name: v.name.trim(), email: v.email.trim(), passwordHash: v.passwordHash,
+                      phone: v.phone?.trim() || '', vehicleType: v.vehicleType, licenseNumber: v.licenseNumber };
 
-    this.user.role = 'CUSTOMER';
-    this.authService.register(this.user).subscribe({
+    const obs = this.isDriverMode
+      ? this.authService.registerDriver(payload)
+      : this.authService.register(payload);
+
+    obs.subscribe({
       next: (res) => {
         this.submitting = false;
-        this.successMessage = 'Registration successful! Redirecting...';
+        if (this.isDriverMode) {
+          this.showPendingMessage = true;
+        } else {
+          this.router.navigate(['/customer/dashboard']);
+        }
         this.cdr.markForCheck();
-        const role = this.authService.getUserRole() || res?.user?.role || 'CUSTOMER';
-        setTimeout(() => {
-          if (String(role).toUpperCase() === 'CUSTOMER') {
-            this.router.navigate(['/customer/dashboard']);
-          } else {
-            this.router.navigate(['/login']);
-          }
-        }, 1000);
       },
       error: (err) => {
-        console.error('Registration error:', err);
-        this.submitting = false;
-        this.errorMessage = err.error?.message || 'Registration failed. Please try again.';
+        this.submitting  = false;
+        this.serverError = err.error?.message || 'Registration failed.';
+        this.fieldErrors = err.error?.fieldErrors || {};
         this.cdr.markForCheck();
       }
     });

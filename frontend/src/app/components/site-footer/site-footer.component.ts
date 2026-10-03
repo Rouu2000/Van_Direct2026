@@ -1,18 +1,22 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { BrandLogoComponent } from '../brand-logo/brand-logo.component';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { EMAIL_RE } from '../../shared/validators';
 
 @Component({
   selector: 'app-site-footer',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, BrandLogoComponent, RouterLink, FormsModule],
   templateUrl: './site-footer.component.html',
   styleUrl: './site-footer.component.css'
 })
 export class SiteFooterComponent {
   newsletterEmail = '';
+  newsletterError = '';
   newsletterDone = signal(false);
+  newsletterSubmitting = false;
   openSection = signal<string | null>(null);
   currentLang = signal<'EN' | 'FR'>('EN');
 
@@ -60,9 +64,11 @@ export class SiteFooterComponent {
   ];
 
   subscribe(): void {
-    if (this.newsletterEmail.includes('@')) {
-      this.newsletterDone.set(true);
-    }
+    this.newsletterError = '';
+    if (!this.newsletterEmail.trim()) { this.newsletterError = 'Please enter your email address.'; return; }
+    if (!EMAIL_RE.test(this.newsletterEmail.trim())) { this.newsletterError = 'Enter a valid email address.'; return; }
+    this.newsletterSubmitting = true;
+    setTimeout(() => { this.newsletterSubmitting = false; this.newsletterDone.set(true); }, 400);
   }
 
   toggle(id: string): void {

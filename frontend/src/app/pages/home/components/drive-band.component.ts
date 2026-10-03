@@ -14,7 +14,7 @@ import { RouterLink } from '@angular/router';
   <div class="db-inner">
     <div class="db-content">
       <h2 id="db-heading" class="db-title">Drive with VAN DIRECT</h2>
-      <p class="db-sub">Join our fleet of independent drivers across Tunisia. Set your own hours and earn on every delivery.</p>
+      <p class="db-sub">Join our fleet of independent drivers across the Ottawa–Gatineau region. Set your own hours and earn on every delivery.</p>
       <div class="db-benefits">
         <div *ngFor="let b of benefits" class="db-benefit">
           <span class="db-benefit-icon" [innerHTML]="b.svg" aria-hidden="true"></span>

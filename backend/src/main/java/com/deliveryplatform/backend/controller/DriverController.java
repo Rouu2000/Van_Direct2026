@@ -4,16 +4,24 @@ import com.deliveryplatform.backend.config.JwtUtil;
 import com.deliveryplatform.backend.model.DriverStatus;
 import com.deliveryplatform.backend.model.Shipment;
 import com.deliveryplatform.backend.model.User;
+import com.deliveryplatform.backend.repository.ShipmentRepository;
 import com.deliveryplatform.backend.repository.UserRepository;
 import com.deliveryplatform.backend.service.DriverLocationService;
 import com.deliveryplatform.backend.service.DriverStatusService;
 import com.deliveryplatform.backend.service.ShipmentService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,6 +35,7 @@ public class DriverController {
     private final DriverStatusService driverStatusService;
     private final DriverLocationService driverLocationService;
     private final ShipmentService shipmentService;
+    private final ShipmentRepository shipmentRepository;
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
 
@@ -34,12 +43,14 @@ public class DriverController {
             DriverStatusService driverStatusService,
             DriverLocationService driverLocationService,
             ShipmentService shipmentService,
+            ShipmentRepository shipmentRepository,
             JwtUtil jwtUtil,
             UserRepository userRepository
     ) {
         this.driverStatusService = driverStatusService;
         this.driverLocationService = driverLocationService;
         this.shipmentService = shipmentService;
+        this.shipmentRepository = shipmentRepository;
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
     }
@@ -108,6 +119,69 @@ public class DriverController {
         }
         List<Shipment> deliveries = shipmentService.getDriverShipments(id);
         return ResponseEntity.ok(deliveries);
+    }
+
+    @GetMapping("/{id}/deliveries/history")
+    @PreAuthorize("hasAnyRole('DRIVER','ADMIN')")
+    public ResponseEntity<?> getDeliveryHistory(
+            @PathVariable UUID id,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request
+    ) {
+        // Driver can only see their own history; admin can see any driver's
+        String role = extractRole(request);
+        if (!"ADMIN".equalsIgnoreCase(role) && !isSameDriver(id, request)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "Access denied"));
+        }
+
+        // Determine which statuses to include
+        List<Shipment.ShipmentStatus> statuses;
+        if (status != null && !status.isBlank()) {
+            try {
+                statuses = List.of(Shipment.ShipmentStatus.valueOf(status.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Invalid status: " + status));
+            }
+        } else {
+            statuses = List.of(Shipment.ShipmentStatus.DELIVERED, Shipment.ShipmentStatus.CANCELLED);
+        }
+
+        LocalDateTime fromDt = from != null ? from.atStartOfDay() : null;
+        LocalDateTime toDt   = to   != null ? to.atTime(23, 59, 59) : null;
+
+        PageRequest pageable = PageRequest.of(page, Math.min(size, 50),
+                Sort.by(Sort.Direction.DESC, "deliveredAt"));
+        Page<Shipment> result = shipmentRepository.findDriverHistory(id, statuses, fromDt, toDt, pageable);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("content",       result.getContent());
+        response.put("totalElements", result.getTotalElements());
+        response.put("totalPages",    result.getTotalPages());
+        response.put("page",          result.getNumber());
+        response.put("size",          result.getSize());
+        return ResponseEntity.ok(response);
+    }
+
+    private String extractRole(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            try {
+                String role = jwtUtil.extractRole(authHeader.substring(7));
+                if (role != null && role.startsWith("ROLE_")) role = role.substring(5);
+                return role != null ? role.toUpperCase() : null;
+            } catch (Exception ignored) {}
+        }
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null) {
+            return auth.getAuthorities().stream()
+                    .map(a -> a.getAuthority().replace("ROLE_", ""))
+                    .findFirst().orElse(null);
+        }
+        return null;
     }
 
     private boolean isSameDriver(UUID id, HttpServletRequest request) {

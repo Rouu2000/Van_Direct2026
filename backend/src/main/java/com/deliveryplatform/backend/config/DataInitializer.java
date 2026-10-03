@@ -51,18 +51,18 @@ public class DataInitializer implements CommandLineRunner {
 
         User admin = new User();
         admin.setName("System Admin");
-        admin.setEmail("admin@vandirect.com");
+        admin.setEmail("admin@vandirect.ca");
         admin.setPasswordHash(passwordEncoder.encode(resolvedAdminPassword));
-        admin.setPhone("+1 000 000 0000");
+        admin.setPhone("+1 (613) 555-0100");
         admin.setRole(User.Role.ADMIN);
         admin.setStatus(User.Status.ACTIVE);
         userRepository.save(admin);
 
         User driver = new User();
         driver.setName("John Driver");
-        driver.setEmail("driver@vandirect.com");
+        driver.setEmail("driver@vandirect.ca");
         driver.setPasswordHash(passwordEncoder.encode("driver123"));
-        driver.setPhone("+1 111 222 3333");
+        driver.setPhone("+1 (613) 555-0111");
         driver.setRole(User.Role.DRIVER);
         driver.setStatus(User.Status.ACTIVE);
         driver.setVehicleType(User.VehicleType.VAN);
@@ -77,9 +77,9 @@ public class DataInitializer implements CommandLineRunner {
 
         User customer = new User();
         customer.setName("Alice Customer");
-        customer.setEmail("customer@vandirect.com");
+        customer.setEmail("customer@vandirect.ca");
         customer.setPasswordHash(passwordEncoder.encode("customer123"));
-        customer.setPhone("+1 444 555 6666");
+        customer.setPhone("+1 (613) 555-0122");
         customer.setRole(User.Role.CUSTOMER);
         customer.setStatus(User.Status.ACTIVE);
         userRepository.save(customer);

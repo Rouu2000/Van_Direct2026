@@ -26,7 +26,7 @@ import { PageLayoutComponent } from '../../components/page-layout/page-layout.co
   <div class="lt-tech">
     <h2 class="lt-h2">How the live map works</h2>
     <p>Once a driver accepts your shipment, their device sends a GPS position to the VAN DIRECT server every 5 seconds via a WebSocket connection. The map on the tracking page receives those updates in real time and moves the driver marker smoothly. You always see where the driver is without refreshing the page.</p>
-    <p style="margin-top:12px">The map is centred on Tunisia and uses OpenStreetMap tiles — no Google Maps account is required, and no data leaves the platform.</p>
+    <p style="margin-top:12px">The map is centred on Ottawa and uses OpenStreetMap tiles — no Google Maps account is required, and no data leaves the platform.</p>
   </div>
 
   <div class="lt-cta">

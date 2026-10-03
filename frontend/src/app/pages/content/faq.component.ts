@@ -42,6 +42,6 @@ export class FaqComponent {
     { q: 'How do I track my parcel?', a: 'Once a driver has been assigned you can open the tracking page (the link is in your notification) and watch the driver\'s GPS marker update every 5 seconds on a live map.' },
     { q: 'What happens if no driver is available?', a: 'Your shipment stays in BOOKED state. The system retries every 5 seconds. If a driver becomes available nearby they will be offered your shipment automatically.' },
     { q: 'Can I cancel a shipment?', a: 'Yes — as long as the status is BOOKED or DRIVER_ASSIGNED. Once a driver has picked up the parcel (PICKED_UP) it can no longer be cancelled. Go to your dashboard and click "Cancel" on the shipment.' },
-    { q: 'What areas do you cover?', a: 'VAN DIRECT currently operates within major Tunisian cities including Tunis, Sfax, Sousse, Monastir, and Béja. Coverage is expanding — follow us on social media for updates.' },
+    { q: 'What areas do you cover?', a: 'VAN DIRECT currently operates within the Ottawa–Gatineau region, including Ottawa, Kanata, Nepean, Barrhaven, Orleans, Stittsville, Vanier and Gatineau. Coverage is expanding — follow us on social media for updates.' },
   ];
 }

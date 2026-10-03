@@ -81,8 +81,8 @@ export class LiveShipmentsComponent implements OnInit, AfterViewInit, OnDestroy 
   private geocoding = false;
 
   /* Tunisia default centre */
-  private readonly CENTER: L.LatLngExpression = [34.0, 9.5];
-  private readonly ZOOM = 6;
+  private readonly CENTER: L.LatLngExpression = [45.4215, -75.6972];
+  private readonly ZOOM = 11;
 
   constructor(private adminService: AdminService, private cdr: ChangeDetectorRef) {}
 
@@ -159,7 +159,7 @@ export class LiveShipmentsComponent implements OnInit, AfterViewInit, OnDestroy 
     if (geocacheMap.has(key)) return Promise.resolve(geocacheMap.get(key)!);
 
     const q = address.toLowerCase().includes('tunisia') ? address : `${address}, Tunisia`;
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=tn&viewbox=7.5,37.5,11.6,30.2&bounded=0`;
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=ca&viewbox=-76.4,45.7,-75.0,44.9&bounded=0`;
 
     return new Promise(resolve => {
       setTimeout(async () => {

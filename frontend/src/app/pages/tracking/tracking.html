@@ -59,7 +59,7 @@
         <div><strong>Pickup</strong><br />{{ shipment.pickupAddress }}</div>
         <div><strong>Drop-off</strong><br />{{ shipment.dropoffAddress }}</div>
         <div><strong>Service</strong><br />{{ shipment.serviceTier }}</div>
-        <div><strong>Price</strong><br />EUR {{ shipment.priceAmount | number:'1.2-2' }}</div>
+        <div><strong>Price</strong><br />{{ shipment.priceAmount | cad }}</div>
       </div>
 
       <h4>Parcels</h4>

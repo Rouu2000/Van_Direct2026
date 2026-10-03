@@ -1,0 +1,29 @@
+.af-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 20px; }
+.af-heading { font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: 16px; }
+.af-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.af-field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 160px; margin-bottom: 12px; }
+.af-field-lg { flex: 2; }
+.af-field-sm { flex: 0 0 120px; }
+.af-label { font-size: .8rem; font-weight: 600; color: var(--text-2); }
+.af-req  { color: var(--brand); font-weight: 700; }
+.af-opt  { font-weight: 400; color: var(--text-muted); }
+.af-checkbox { display: flex; align-items: center; gap: 8px; font-size: .875rem; color: var(--text-2); margin-top: 4px; cursor: pointer; }
+.af-checkbox input { width: 16px; height: 16px; accent-color: var(--brand); cursor: pointer; }
+.af-suggestions {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
+  background: var(--surface); border: 1px solid var(--border); border-top: none;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm); list-style: none;
+  padding: 4px 0; max-height: 180px; overflow-y: auto; box-shadow: var(--shadow-md);
+}
+.af-suggestions li { padding: 8px 12px; font-size: .875rem; cursor: pointer; transition: background 120ms; }
+.af-suggestions li:hover { background: var(--bg-2); color: var(--brand); }
+.af-geo-status { margin-top: 8px; min-height: 20px; font-size: .8rem; }
+.af-geo-loading { display: flex; align-items: center; gap: 6px; color: var(--text-muted); }
+.af-spinner { width: 12px; height: 12px; border: 2px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin .6s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.af-geo-ok   { color: var(--success); font-weight: 600; }
+.af-geo-warn { color: var(--warning); font-weight: 600; }
+.af-geo-msg  { }
+.af-map-wrap { margin-top: 12px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); }
+.af-map { height: 200px; width: 100%; }
+.af-map-hint { font-size: .75rem; color: var(--text-muted); padding: 4px 8px; background: var(--surface-2); text-align: center; }

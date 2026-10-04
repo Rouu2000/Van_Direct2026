@@ -28,9 +28,9 @@ public interface ShipmentRepository extends JpaRepository<Shipment, UUID> {
 
     @Query("SELECT s FROM Shipment s WHERE s.assignedDriverId = :driverId " +
            "AND s.status IN :statuses " +
-           "AND (:fromDate IS NULL OR s.deliveredAt >= :fromDate) " +
-           "AND (:toDate IS NULL OR s.deliveredAt <= :toDate) " +
-           "ORDER BY s.deliveredAt DESC NULLS LAST")
+           "AND s.deliveredAt >= :fromDate " +
+           "AND s.deliveredAt <= :toDate " +
+           "ORDER BY CASE WHEN s.deliveredAt IS NULL THEN 1 ELSE 0 END, s.deliveredAt DESC")
     org.springframework.data.domain.Page<Shipment> findDriverHistory(
             @Param("driverId") UUID driverId,
             @Param("statuses") List<Shipment.ShipmentStatus> statuses,

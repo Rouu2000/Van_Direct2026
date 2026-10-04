@@ -4,6 +4,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/rou
 import { AuthService } from '../../services/auth.service';
 import { NotificationService, AppNotification } from '../../services/notification.service';
 import { BrandLogoComponent } from '../brand-logo/brand-logo.component';
+import { UserPillComponent } from '../user-pill/user-pill.component';
 
 interface NavItem {
   label: string;
@@ -14,7 +15,7 @@ interface NavItem {
 @Component({
   selector: 'app-admin-shell',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, BrandLogoComponent],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, BrandLogoComponent, UserPillComponent],
   templateUrl: './admin-shell.component.html',
   styleUrl: './admin-shell.component.css'
 })
@@ -39,6 +40,12 @@ export class AdminShellComponent implements OnInit {
   );
   readonly unreadCount = computed(() => this.notificationService.unreadCount());
   readonly notifications = computed(() => this.notificationService.notifications());
+
+  readonly adminContextLinks = [
+    { label: 'Dashboard',       icon: 'dashboard',      route: '/admin/dashboard' },
+    { label: 'Shipments',       icon: 'local_shipping', route: '/admin/shipments' },
+    { label: 'All Drivers',     icon: 'directions_car', route: '/admin/drivers' },
+  ];
 
   constructor(
     public authService: AuthService,

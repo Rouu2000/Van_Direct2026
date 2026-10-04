@@ -163,6 +163,32 @@ public class SecurityMockMvcTest {
                 .andExpect(status().isForbidden());
     }
 
+    // ── Customer cannot call driver-only endpoints ───────────
+    @Test
+    void customerTokenOnDriverAvailabilityReturns403() throws Exception {
+        mockMvc.perform(put("/api/drivers/" + driverId + "/availability")
+                        .header("Authorization", "Bearer " + customerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"AVAILABLE\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void customerTokenOnDriverLocationReturns403() throws Exception {
+        mockMvc.perform(post("/api/drivers/" + driverId + "/location")
+                        .header("Authorization", "Bearer " + customerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"lat\":45.42,\"lng\":-75.69}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void customerTokenOnDriverDeliveriesReturns403() throws Exception {
+        mockMvc.perform(get("/api/drivers/" + driverId + "/deliveries")
+                        .header("Authorization", "Bearer " + customerToken))
+                .andExpect(status().isForbidden());
+    }
+
     // Customer can only read own shipments
     @Test
     void customerCannotReadOtherCustomerShipment() throws Exception {
@@ -311,19 +337,38 @@ public class SecurityMockMvcTest {
                 .andExpect(status().is2xxSuccessful());
     }
 
+    /** Driver token for a DIFFERENT driver's id → 403 Forbidden */
     @Test
-    void driverHistory_driverCanOnlySeeOwnHistory() throws Exception {
-        // Another driver cannot read a different driver's history
-        mockMvc.perform(get("/api/drivers/" + driverId + "/deliveries/history")
-                        .header("Authorization", "Bearer " + customerToken))
-                .andExpect(status().is4xxClientError());
+    void driverHistory_differentDriverReturns403() throws Exception {
+        UUID otherDriverId = UUID.randomUUID(); // not the same as driverId
+        mockMvc.perform(get("/api/drivers/" + otherDriverId + "/deliveries/history")
+                        .header("Authorization", "Bearer " + driverToken))
+                .andExpect(status().isForbidden());
     }
 
+    /** No Authorization header → 401 Unauthorized */
+    @Test
+    void driverHistory_noTokenReturns401() throws Exception {
+        mockMvc.perform(get("/api/drivers/" + driverId + "/deliveries/history"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    /** Admin token can read any driver's history → 200 */
     @Test
     void driverHistory_adminCanSeeAnyDriverHistory() throws Exception {
         mockMvc.perform(get("/api/drivers/" + driverId + "/deliveries/history")
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk());
+    }
+
+    /** Driver reads their OWN history → 200 */
+    @Test
+    void driverHistory_ownDriverReturns200() throws Exception {
+        mockMvc.perform(get("/api/drivers/" + driverId + "/deliveries/history")
+                        .header("Authorization", "Bearer " + driverToken))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .jsonPath("$.content").isArray());
     }
 
     // ── Parcel validation ────────────────────────────────────────────
@@ -366,5 +411,31 @@ public class SecurityMockMvcTest {
                 .header("Authorization", "Bearer " + customerToken)
                 .contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isBadRequest());
+    }
+
+    // ── Driver history endpoint ───────────────────────────────
+
+    /** Driver can call their own history with no filters → 200 with empty page */
+    @Test
+    void driverHistory_returnsEmptyListWhenNoHistory() throws Exception {
+        // findDriverHistory stub in setUp already returns Page.empty()
+        mockMvc.perform(get("/api/drivers/" + driverId + "/deliveries/history")
+                        .header("Authorization", "Bearer " + driverToken))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .jsonPath("$.content").isArray())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .jsonPath("$.totalElements").value(0));
+    }
+
+    /** Driver can filter history by status=DELIVERED → 200 */
+    @Test
+    void driverHistory_worksWithStatusFilter() throws Exception {
+        mockMvc.perform(get("/api/drivers/" + driverId + "/deliveries/history")
+                        .param("status", "DELIVERED")
+                        .header("Authorization", "Bearer " + driverToken))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .jsonPath("$.content").isArray());
     }
 }

@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { BrandLogoComponent } from '../brand-logo/brand-logo.component';
+import { UserPillComponent } from '../user-pill/user-pill.component';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService, AppNotification } from '../../services/notification.service';
 
@@ -25,7 +26,7 @@ export interface MenuPanel {
 @Component({
   selector: 'app-site-header',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, FormsModule, BrandLogoComponent],
+  imports: [CommonModule, RouterLink, RouterLinkActive, FormsModule, BrandLogoComponent, UserPillComponent],
   templateUrl: './site-header.component.html',
   styleUrl: './site-header.component.css'
 })
@@ -71,6 +72,22 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
 
   /** True for roles that should see the stripped, role-specific header instead of the mega-menu */
   readonly isStrippedHeader = computed(() => this.loggedIn() && (this.isDriver() || this.isAdmin()));
+
+  /** Context links passed into UserPillComponent based on the current role */
+  readonly pillContextLinks = computed(() => {
+    if (this.isCustomer()) return [
+      { label: 'My shipments',  icon: 'dashboard',       route: '/customer/dashboard' },
+      { label: 'New shipment',  icon: 'add_box',         route: '/customer/shipments/new' },
+      { label: 'Track a parcel',icon: 'gps_fixed',       route: '/track' },
+    ];
+    if (this.isDriver()) return [
+      { label: 'My deliveries', icon: 'local_shipping',  route: '/driver/deliveries' },
+    ];
+    if (this.isAdmin()) return [
+      { label: 'Admin dashboard', icon: 'dashboard',     route: '/admin/dashboard' },
+    ];
+    return [];
+  });
 
   // ── Mega-menu definitions ──────────────────────────────────
   readonly panels: MenuPanel[] = [

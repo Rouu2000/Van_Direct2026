@@ -1,0 +1,141 @@
+/* ── Wrapper ────────────────────────────────────────────────── */
+.up-wrap { position: relative; display: inline-flex; }
+
+/* ── Pill trigger ───────────────────────────────────────────── */
+.up-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 10px 4px 4px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill);
+  cursor: pointer; font-family: var(--font);
+  transition: border-color 150ms, box-shadow 150ms, background 150ms;
+  white-space: nowrap; outline: none;
+}
+.up-pill:hover,
+.up-wrap.open .up-pill {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(27,58,107,.08);
+  background: var(--bg-2);
+}
+.up-pill:focus-visible { box-shadow: 0 0 0 3px rgba(196,30,58,.25); }
+
+/* ── Avatar circle ──────────────────────────────────────────── */
+.up-avatar {
+  position: relative;
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: .72rem; font-weight: 800;
+  letter-spacing: .5px; flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,.18);
+}
+.up-avatar-lg {
+  width: 46px; height: 46px; font-size: 1.05rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+
+/* ── Online dot ─────────────────────────────────────────────── */
+.up-online-dot {
+  position: absolute; bottom: 0; right: 0;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #22C55E;
+  border: 1.5px solid var(--surface);
+}
+.up-online-dot-lg {
+  width: 12px; height: 12px;
+  border: 2px solid var(--surface);
+}
+
+/* ── First name ─────────────────────────────────────────────── */
+.up-name {
+  font-size: .875rem; font-weight: 700; color: var(--text-2);
+  max-width: 100px; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Role badge (pill) ──────────────────────────────────────── */
+.up-role-badge {
+  font-size: .65rem; font-weight: 700; letter-spacing: .5px;
+  text-transform: uppercase; padding: 2px 8px;
+  border-radius: var(--radius-pill); flex-shrink: 0;
+}
+.up-role-badge[data-role="CUSTOMER"] { background: rgba(37,99,235,.1);  color: #1D4ED8; }
+.up-role-badge[data-role="DRIVER"]   { background: rgba(217,119,6,.1);  color: #B45309; }
+.up-role-badge[data-role="ADMIN"]    { background: rgba(124,58,237,.1); color: #7C3AED; }
+
+.up-role-badge-sm { font-size: .62rem; }
+
+/* ── Rotating chevron ───────────────────────────────────────── */
+.up-chevron {
+  color: var(--text-muted); flex-shrink: 0;
+  transition: transform 200ms var(--ease, ease);
+}
+.up-chevron.rotated { transform: rotate(180deg); }
+
+/* ── Dropdown ───────────────────────────────────────────────── */
+.up-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl, 0 16px 40px rgba(0,0,0,.14));
+  min-width: 240px; z-index: 500;
+  animation: upFadeDown 140ms var(--ease, ease) both;
+  overflow: hidden;
+}
+@keyframes upFadeDown {
+  from { opacity: 0; transform: translateY(-8px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+@media (prefers-reduced-motion: reduce) { .up-dropdown { animation: none; } }
+
+/* ── Dropdown header ────────────────────────────────────────── */
+.up-dd-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px;
+}
+.up-dd-info { display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
+.up-dd-fullname {
+  font-size: .9rem; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.up-dd-email {
+  font-size: .75rem; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Separator ──────────────────────────────────────────────── */
+.up-dd-sep { height: 1px; background: var(--border); margin: 2px 0; }
+
+/* ── Items ──────────────────────────────────────────────────── */
+.up-dd-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px; font-size: .875rem; font-weight: 500;
+  color: var(--text-2); text-decoration: none; cursor: pointer;
+  background: transparent; border: none; width: 100%; text-align: left;
+  font-family: var(--font); transition: background 120ms, color 120ms;
+}
+.up-dd-item:hover,
+.up-dd-item:focus-visible { background: var(--bg-2); color: var(--brand); outline: none; }
+.up-dd-icon { font-size: 18px; color: var(--text-muted); flex-shrink: 0; transition: color 120ms; }
+.up-dd-item:hover .up-dd-icon,
+.up-dd-item:focus-visible .up-dd-icon { color: var(--brand); }
+
+/* ── Logout item ────────────────────────────────────────────── */
+.up-dd-logout { color: var(--brand) !important; font-weight: 700; }
+.up-dd-logout .up-dd-icon { color: var(--brand) !important; }
+.up-dd-logout:hover,
+.up-dd-logout:focus-visible {
+  background: rgba(196,30,58,.07) !important;
+  color: var(--brand) !important;
+}
+
+/* ── Dark mode ──────────────────────────────────────────────── */
+:host-context([data-theme="dark"]) .up-pill { border-color: rgba(255,255,255,.15); }
+:host-context([data-theme="dark"]) .up-pill:hover { border-color: rgba(255,255,255,.35); }
+:host-context([data-theme="dark"]) .up-dropdown { border-color: rgba(255,255,255,.1); }
+
+/* ── Responsive: hide name + badge on small screens ─────────── */
+@media (max-width: 520px) {
+  .up-name,
+  .up-role-badge { display: none; }
+}

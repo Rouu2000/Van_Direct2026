@@ -12,7 +12,6 @@ import com.deliveryplatform.backend.service.ShipmentService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +28,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/drivers")
 @CrossOrigin(origins = "http://localhost:4200")
-@PreAuthorize("hasRole('DRIVER')")
 public class DriverController {
 
     private final DriverStatusService driverStatusService;
@@ -150,20 +148,29 @@ public class DriverController {
             statuses = List.of(Shipment.ShipmentStatus.DELIVERED, Shipment.ShipmentStatus.CANCELLED);
         }
 
-        LocalDateTime fromDt = from != null ? from.atStartOfDay() : null;
-        LocalDateTime toDt   = to   != null ? to.atTime(23, 59, 59) : null;
+        // Substitute sentinel bounds so the query never receives null parameters.
+        // PostgreSQL cannot determine the type of an unbound null in (? IS NULL OR ...).
+        LocalDateTime fromDt = (from != null)
+                ? from.atStartOfDay()
+                : LocalDateTime.of(2000, 1, 1, 0, 0);       // epoch-like lower bound
+        LocalDateTime toDt   = (to != null)
+                ? to.atTime(23, 59, 59)
+                : LocalDateTime.of(2100, 12, 31, 23, 59, 59); // far-future upper bound
 
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 50),
-                Sort.by(Sort.Direction.DESC, "deliveredAt"));
-        Page<Shipment> result = shipmentRepository.findDriverHistory(id, statuses, fromDt, toDt, pageable);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("content",       result.getContent());
-        response.put("totalElements", result.getTotalElements());
-        response.put("totalPages",    result.getTotalPages());
-        response.put("page",          result.getNumber());
-        response.put("size",          result.getSize());
-        return ResponseEntity.ok(response);
+        PageRequest pageable = PageRequest.of(page, Math.min(size, 50));
+        try {
+            Page<Shipment> result = shipmentRepository.findDriverHistory(id, statuses, fromDt, toDt, pageable);
+            Map<String, Object> response = new HashMap<>();
+            response.put("content",       result.getContent());
+            response.put("totalElements", result.getTotalElements());
+            response.put("totalPages",    result.getTotalPages());
+            response.put("page",          result.getNumber());
+            response.put("size",          result.getSize());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Failed to load history: " + e.getMessage()));
+        }
     }
 
     private String extractRole(HttpServletRequest request) {

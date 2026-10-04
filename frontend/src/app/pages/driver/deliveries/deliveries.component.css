@@ -1,4 +1,8 @@
-.drv-page { max-width: 680px; margin: 0 auto; padding-bottom: 48px; display: flex; flex-direction: column; gap: 16px; }
+.drv-page { max-width: 680px; margin: 0 auto; padding-top: 36px; padding-bottom: 48px; display: flex; flex-direction: column; gap: 16px; }
+
+@media (max-width: 480px) {
+  .drv-page { padding-top: 20px; }
+}
 
 /* Availability card */
 .avail-card { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); transition: border-color 200ms, background 200ms; }
@@ -146,3 +150,26 @@
 .hist-item-meta {
   display: flex; gap: 16px; font-size: .78rem; color: var(--text-muted); flex-wrap: wrap;
 }
+
+/* ── History error block with Retry ────────────────────────── */
+.drv-error-block {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; background: var(--danger-bg);
+  border: 1px solid var(--danger); border-radius: var(--radius-md);
+}
+.drv-error-icon { color: var(--danger); font-size: 22px; flex-shrink: 0; }
+.drv-error-body {
+  display: flex; flex-direction: column; gap: 2px; flex: 1;
+  font-size: .875rem;
+}
+.drv-error-body strong { color: var(--danger); font-weight: 700; }
+.drv-error-body span   { color: var(--text-2); font-size: .8rem; }
+.drv-retry-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--danger); background: transparent;
+  color: var(--danger); font-weight: 700; font-family: var(--font);
+  font-size: .8rem; cursor: pointer; white-space: nowrap; transition: all 150ms;
+  flex-shrink: 0;
+}
+.drv-retry-btn:hover { background: var(--danger); color: #fff; }

@@ -100,99 +100,28 @@
           </svg>
         </button>
 
-        <!-- LOGGED IN: avatar initials + first name -->
-        <button *ngIf="loggedIn()"
-                class="sh-account-btn sh-account-btn-user"
-                (click)="toggleAccount($event)"
-                [attr.aria-expanded]="accountOpen()"
-                aria-haspopup="true">
-          <span class="sh-user-avatar" aria-hidden="true">{{ displayName().charAt(0).toUpperCase() }}</span>
-          <span class="sh-account-label">{{ firstName() }}</span>
-          <svg class="sh-caret" [class.open]="accountOpen()"
-               width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M7 10l5 5 5-5z"/>
-          </svg>
-        </button>
+        <!-- LOGGED IN: UserPill component -->
+        <app-user-pill *ngIf="loggedIn()"
+                       [contextLinks]="pillContextLinks()">
+        </app-user-pill>
 
-        <!-- DROPDOWN -->
-        <div class="sh-dropdown account-dropdown" *ngIf="accountOpen()"
+        <!-- DROPDOWN for guests only -->
+        <div class="sh-dropdown account-dropdown" *ngIf="!loggedIn() && accountOpen()"
              role="menu" (keydown)="onMenuKey($event)">
-
-          <!-- Logged out -->
-          <ng-container *ngIf="!loggedIn()">
-            <div class="sh-dd-section-label">Your account</div>
-            <a routerLink="/login"    class="sh-dd-item" role="menuitem" (click)="closeAll()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 7 9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5-5-5zm9 12h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-8v2h8v14z"/></svg>
-              Log in
-            </a>
-            <a routerLink="/register" class="sh-dd-item" role="menuitem" (click)="closeAll()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V8H4v2H2v2h2v2h2v-2h2v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-              Create an account
-            </a>
-            <div class="sh-dd-sep"></div>
-            <a routerLink="/register" [queryParams]="{driver:'1'}" class="sh-dd-item" role="menuitem" (click)="closeAll()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 8h-3V4H3a2 2 0 0 0-2 2v11h2a3 3 0 0 0 6 0h6a3 3 0 0 0 6 0h2v-5l-3-4z"/></svg>
-              Become a driver
-            </a>
-          </ng-container>
-
-          <!-- Logged in -->
-          <ng-container *ngIf="loggedIn()">
-            <div class="sh-dd-user-block">
-              <span class="sh-dd-avatar-lg" aria-hidden="true">{{ displayName().charAt(0).toUpperCase() }}</span>
-              <div class="sh-dd-user-info">
-                <span class="sh-dd-name">{{ displayName() }}</span>
-                <span class="sh-dd-role-badge" [attr.data-role]="auth.getUserRole()">{{ auth.getUserRole() }}</span>
-              </div>
-            </div>
-            <div class="sh-dd-sep"></div>
-
-            <!-- Customer links -->
-            <ng-container *ngIf="isCustomer()">
-              <a routerLink="/customer/dashboard" class="sh-dd-item" role="menuitem" (click)="closeAll()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
-                My shipments
-              </a>
-              <a routerLink="/customer/shipments/new" class="sh-dd-item" role="menuitem" (click)="closeAll()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-                New shipment
-              </a>
-              <a routerLink="/track" class="sh-dd-item" role="menuitem" (click)="closeAll()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
-                Track a parcel
-              </a>
-            </ng-container>
-
-            <!-- Driver links -->
-            <ng-container *ngIf="isDriver()">
-              <a routerLink="/driver/deliveries" class="sh-dd-item" role="menuitem" (click)="closeAll()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 8h-3V4H3a2 2 0 0 0-2 2v11h2a3 3 0 0 0 6 0h6a3 3 0 0 0 6 0h2v-5l-3-4z"/></svg>
-                My deliveries
-              </a>
-            </ng-container>
-
-            <!-- Admin links -->
-            <ng-container *ngIf="isAdmin()">
-              <a routerLink="/admin/dashboard" class="sh-dd-item" role="menuitem" (click)="closeAll()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
-                Admin dashboard
-              </a>
-            </ng-container>
-
-            <!-- Notifications for all logged-in -->
-            <a routerLink="/" class="sh-dd-item" role="menuitem" (click)="closeAll()"
-               *ngIf="unreadCount() > 0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 0 0 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4a1.5 1.5 0 0 0-3 0v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
-              Notifications
-              <span class="sh-dd-badge">{{ unreadCount() }}</span>
-            </a>
-
-            <div class="sh-dd-sep"></div>
-            <button class="sh-dd-item sh-dd-logout" role="menuitem" (click)="logout()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
-              Sign out
-            </button>
-          </ng-container>
+          <div class="sh-dd-section-label">Your account</div>
+          <a routerLink="/login"    class="sh-dd-item" role="menuitem" (click)="closeAll()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 7 9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5-5-5zm9 12h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-8v2h8v14z"/></svg>
+            Log in
+          </a>
+          <a routerLink="/register" class="sh-dd-item" role="menuitem" (click)="closeAll()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V8H4v2H2v2h2v2h2v-2h2v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            Create an account
+          </a>
+          <div class="sh-dd-sep"></div>
+          <a routerLink="/register" [queryParams]="{driver:'1'}" class="sh-dd-item" role="menuitem" (click)="closeAll()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 8h-3V4H3a2 2 0 0 0-2 2v11h2a3 3 0 0 0 6 0h6a3 3 0 0 0 6 0h2v-5l-3-4z"/></svg>
+            Become a driver
+          </a>
         </div>
       </div>
 
@@ -314,10 +243,11 @@
       </ng-container>
       <ng-container *ngIf="loggedIn()">
         <div class="sh-drawer-user">
-          <span class="sh-user-avatar" style="width:32px;height:32px;font-size:.85rem" aria-hidden="true">{{ displayName().charAt(0).toUpperCase() }}</span>
+          <span class="sh-user-avatar" aria-hidden="true">{{ firstName().charAt(0).toUpperCase() }}</span>
           <div>
             <div style="font-size:.875rem;font-weight:700;color:#fff">{{ displayName() }}</div>
-            <div style="font-size:.72rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px">{{ auth.getUserRole() }}</div>
+            <span class="sh-dd-role-badge" [attr.data-role]="auth.getUserRole()"
+                  style="margin-top:4px;display:inline-block">{{ auth.getUserRole() }}</span>
           </div>
         </div>
         <a [routerLink]="getMyAreaRoute()" class="btn btn-secondary" (click)="closeDrawer()">My area</a>

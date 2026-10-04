@@ -141,11 +141,24 @@
       <div *ngFor="let i of [1,2,3]" class="skeleton" style="height:64px;border-radius:var(--radius-md)"></div>
     </div>
 
-    <div *ngIf="historyError" class="drv-error">{{ historyError }}</div>
+    <!-- Error state with Retry -->
+    <div *ngIf="historyError" class="drv-error-block">
+      <span class="material-icons drv-error-icon">error_outline</span>
+      <div class="drv-error-body">
+        <strong>Couldn't load history</strong>
+        <span>{{ historyError }}</span>
+      </div>
+      <button class="drv-retry-btn" (click)="loadHistory()">
+        <span class="material-icons" style="font-size:16px">refresh</span>
+        Retry
+      </button>
+    </div>
 
+    <!-- Empty state -->
     <div *ngIf="!historyLoading && !historyError && history.length === 0" class="drv-empty">
-      <span class="material-icons" style="font-size:40px;color:var(--border-strong)">history</span>
-      <p>No completed deliveries found.</p>
+      <span class="material-icons" style="font-size:48px;color:var(--border-strong)">history</span>
+      <h3>No deliveries yet</h3>
+      <p>Your completed and cancelled deliveries will appear here.</p>
     </div>
 
     <!-- History list -->

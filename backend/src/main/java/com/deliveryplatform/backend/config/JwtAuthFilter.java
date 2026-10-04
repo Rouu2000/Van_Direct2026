@@ -38,7 +38,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             final String token = authHeader.substring(7);
             try {
                 final String email = jwtUtil.extractEmail(token);
-                final String role = jwtUtil.extractRole(token);
+                final String role  = jwtUtil.extractRole(token);
 
                 if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     if (jwtUtil.validateToken(token, email)) {
@@ -49,14 +49,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                 ? List.of(new SimpleGrantedAuthority(normalizedRole))
                                 : Collections.emptyList();
 
-                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                                email, null, authorities);
+                        UsernamePasswordAuthenticationToken authToken =
+                                new UsernamePasswordAuthenticationToken(email, null, authorities);
                         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authToken);
                     }
                 }
             } catch (Exception e) {
-                // Invalid or expired token - clear context and proceed
+                // Invalid or expired token — clear context and let the request proceed
+                // unauthenticated; Spring Security will return 401.
                 SecurityContextHolder.clearContext();
             }
         }

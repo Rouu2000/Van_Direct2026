@@ -3,67 +3,68 @@
 
   <div class="af-row">
     <div class="af-field af-field-lg">
-      <label class="af-label" [for]="mapId+'-name'">Contact name <span class="af-req">*</span></label>
-      <input [id]="mapId+'-name'" class="form-control" type="text" [(ngModel)]="data.contactName"
+      <label class="af-label" for="af-name-{{ heading }}">Contact name <span class="af-req">*</span></label>
+      <input id="af-name-{{ heading }}" class="form-control" type="text" [(ngModel)]="data.contactName"
              (ngModelChange)="emit()" placeholder="Jane Smith" required>
     </div>
     <div class="af-field">
-      <label class="af-label" [for]="mapId+'-company'">Company <span class="af-opt">(optional)</span></label>
-      <input [id]="mapId+'-company'" class="form-control" type="text" [(ngModel)]="data.company"
+      <label class="af-label" for="af-co-{{ heading }}">Company <span class="af-opt">(optional)</span></label>
+      <input id="af-co-{{ heading }}" class="form-control" type="text" [(ngModel)]="data.company"
              (ngModelChange)="emit()" placeholder="Acme Inc.">
     </div>
   </div>
 
   <div class="af-row">
     <div class="af-field">
-      <label class="af-label" [for]="mapId+'-phone'">Phone <span class="af-req">*</span></label>
-      <input [id]="mapId+'-phone'" class="form-control" type="tel" [(ngModel)]="data.phone"
+      <label class="af-label" for="af-ph-{{ heading }}">Phone <span class="af-req">*</span></label>
+      <input id="af-ph-{{ heading }}" class="form-control" type="tel" [(ngModel)]="data.phone"
              (ngModelChange)="emit()" placeholder="(613) 555-0100" required>
     </div>
     <div class="af-field">
-      <label class="af-label" [for]="mapId+'-email'">
-        Email <span *ngIf="requireEmail" class="af-req">*</span>
+      <label class="af-label" for="af-em-{{ heading }}">
+        Email
+        <span *ngIf="requireEmail" class="af-req">*</span>
         <span *ngIf="!requireEmail" class="af-opt">(optional)</span>
       </label>
-      <input [id]="mapId+'-email'" class="form-control" type="email" [(ngModel)]="data.email"
+      <input id="af-em-{{ heading }}" class="form-control" type="email" [(ngModel)]="data.email"
              (ngModelChange)="emit()" placeholder="jane@example.com"
              [attr.required]="requireEmail || null">
     </div>
   </div>
 
   <div class="af-field">
-    <label class="af-label" [for]="mapId+'-line1'">Address line 1 <span class="af-req">*</span></label>
-    <input [id]="mapId+'-line1'" class="form-control" type="text" [(ngModel)]="data.line1"
+    <label class="af-label" for="af-l1-{{ heading }}">Address line 1 <span class="af-req">*</span></label>
+    <input id="af-l1-{{ heading }}" class="form-control" type="text" [(ngModel)]="data.line1"
            (ngModelChange)="scheduleGeocode()" placeholder="123 Example Street" required>
   </div>
 
   <div class="af-field">
-    <label class="af-label" [for]="mapId+'-line2'">Address line 2 <span class="af-opt">(optional)</span></label>
-    <input [id]="mapId+'-line2'" class="form-control" type="text" [(ngModel)]="data.line2"
+    <label class="af-label" for="af-l2-{{ heading }}">Address line 2 <span class="af-opt">(optional)</span></label>
+    <input id="af-l2-{{ heading }}" class="form-control" type="text" [(ngModel)]="data.line2"
            (ngModelChange)="emit()" placeholder="Apt 4B">
   </div>
 
   <div class="af-row">
     <div class="af-field af-field-sm">
-      <label class="af-label" [for]="mapId+'-postal'">Postal code <span class="af-req">*</span></label>
-      <input [id]="mapId+'-postal'" class="form-control" type="text" [(ngModel)]="data.postalCode"
+      <label class="af-label" for="af-pc-{{ heading }}">Postal code <span class="af-req">*</span></label>
+      <input id="af-pc-{{ heading }}" class="form-control" type="text" [(ngModel)]="data.postalCode"
              (ngModelChange)="scheduleGeocode()" placeholder="K1A 0B1"
              style="text-transform:uppercase" maxlength="7" required>
     </div>
     <div class="af-field af-field-sm">
-      <label class="af-label" [for]="mapId+'-prov'">Province / Territory <span class="af-req">*</span></label>
-      <select [id]="mapId+'-prov'" class="form-control" [(ngModel)]="data.province"
+      <label class="af-label" for="af-pv-{{ heading }}">Province <span class="af-req">*</span></label>
+      <select id="af-pv-{{ heading }}" class="form-control" [(ngModel)]="data.province"
               (ngModelChange)="onProvinceChange()" required>
         <option *ngFor="let p of provinces" [value]="p">{{ p }}</option>
       </select>
     </div>
     <div class="af-field" style="position:relative">
-      <label class="af-label" [for]="mapId+'-city'">City <span class="af-req">*</span></label>
-      <input [id]="mapId+'-city'" class="form-control" type="text"
+      <label class="af-label" for="af-cy-{{ heading }}">City <span class="af-req">*</span></label>
+      <input id="af-cy-{{ heading }}" class="form-control" type="text"
              [ngModel]="data.city" (ngModelChange)="onCityInput($event)"
              (blur)="showSuggestions=false" placeholder="Ottawa" autocomplete="off" required>
-      <ul *ngIf="showSuggestions" class="af-suggestions">
-        <li *ngFor="let c of citySuggestions" (mousedown)="selectCity(c)">{{ c }}</li>
+      <ul *ngIf="showSuggestions" class="af-suggestions" role="listbox">
+        <li *ngFor="let c of citySuggestions" (mousedown)="selectCity(c)" role="option">{{ c }}</li>
       </ul>
     </div>
   </div>
@@ -73,21 +74,15 @@
     <span>This is a residential address</span>
   </label>
 
-  <!-- Geocoding status -->
-  <div class="af-geo-status" *ngIf="geocoding || geoMsg">
+  <!-- Geocoding status — text only, no map -->
+  <div *ngIf="geocoding || geoMsg" class="af-geo-status">
     <span *ngIf="geocoding" class="af-geo-loading">
-      <span class="af-spinner"></span> Locating…
+      <span class="af-spinner"></span> Locating address…
     </span>
     <span *ngIf="!geocoding && geoMsg" class="af-geo-msg"
           [class.af-geo-ok]="data.geoAccuracy === 'ADDRESS'"
           [class.af-geo-warn]="data.geoAccuracy !== 'ADDRESS' && data.geoAccuracy !== 'NONE'">
       {{ geoMsg }}
     </span>
-  </div>
-
-  <!-- Small map with draggable pin -->
-  <div *ngIf="data.lat != null" class="af-map-wrap">
-    <div [id]="mapId" class="af-map"></div>
-    <p class="af-map-hint">Drag the pin to correct the position.</p>
   </div>
 </div>

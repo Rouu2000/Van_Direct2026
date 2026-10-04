@@ -24,7 +24,6 @@
       <app-address-form
         heading="Pickup contact & address"
         [requireEmail]="true"
-        mapId="pickup-map"
         (changed)="onPickupChange($event)">
       </app-address-form>
 
@@ -32,7 +31,6 @@
       <app-address-form
         heading="Recipient contact & address"
         [requireEmail]="false"
-        mapId="dropoff-map"
         (changed)="onDropoffChange($event)">
       </app-address-form>
 

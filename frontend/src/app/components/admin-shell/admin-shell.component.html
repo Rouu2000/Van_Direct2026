@@ -71,21 +71,7 @@
         </div>
 
         <!-- User menu -->
-        <div class="header-dropdown-wrap">
-          <button class="user-btn" (click)="toggleUserMenu()">
-            <span class="user-avatar">{{ displayName().charAt(0).toUpperCase() }}</span>
-            <span class="user-name">{{ displayName() }}</span>
-            <span class="material-icons">arrow_drop_down</span>
-          </button>
-          <div class="dropdown-panel user-panel" *ngIf="userMenuOpen">
-            <div class="dropdown-header no-border">
-              <span class="user-role-label">ADMIN</span>
-            </div>
-            <button class="dropdown-item" (click)="logout()">
-              <span class="material-icons">logout</span> Sign out
-            </button>
-          </div>
-        </div>
+        <app-user-pill [contextLinks]="adminContextLinks"></app-user-pill>
       </div>
     </header>
 

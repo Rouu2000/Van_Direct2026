@@ -1,5 +1,5 @@
 import {
-  Component, Input, Output, EventEmitter, OnInit, OnDestroy, AfterViewInit,
+  Component, Input, Output, EventEmitter, OnInit, OnDestroy,
   ChangeDetectorRef, ChangeDetectionStrategy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -7,7 +7,6 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, catchError, of } from 'rxjs';
-import * as L from 'leaflet';
 import { environment } from '../../../environments/environment';
 
 export interface AddressData {
@@ -43,11 +42,10 @@ const CITY_SUGGESTIONS: Record<string, string[]> = {
   styleUrl: './address-form.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AddressFormComponent implements OnInit, OnDestroy, AfterViewInit {
-  @Input()  heading     = 'Address';
+export class AddressFormComponent implements OnInit, OnDestroy {
+  @Input()  heading      = 'Address';
   @Input()  requireEmail = false;
-  @Input()  mapId       = 'addr-map-' + Math.random().toString(36).slice(2);
-  @Output() changed     = new EventEmitter<AddressData>();
+  @Output() changed      = new EventEmitter<AddressData>();
 
   readonly provinces = PROVINCES;
   citySuggestions: string[] = [];
@@ -59,19 +57,17 @@ export class AddressFormComponent implements OnInit, OnDestroy, AfterViewInit {
     residential: false, lat: null, lng: null, geoAccuracy: null
   };
 
+  // Geocoding status shown as text only — no map
   geocoding = false;
   geoMsg    = '';
 
-  private map: L.Map | null = null;
-  private pin: L.Marker | null = null;
   private geocodeSubject = new Subject<void>();
-  private subs = new Subscription();
+  private subs           = new Subscription();
 
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.updateCitySuggestions();
-    // Debounced geocode: fires 800ms after any address field changes
     this.subs.add(
       this.geocodeSubject.pipe(
         debounceTime(800),
@@ -81,15 +77,7 @@ export class AddressFormComponent implements OnInit, OnDestroy, AfterViewInit {
     );
   }
 
-  ngAfterViewInit(): void {
-    // Small delay to ensure the DOM element exists (may be inside *ngIf)
-    setTimeout(() => this.initMap(), 200);
-  }
-
-  ngOnDestroy(): void {
-    this.subs.unsubscribe();
-    if (this.map) { this.map.remove(); this.map = null; }
-  }
+  ngOnDestroy(): void { this.subs.unsubscribe(); }
 
   // ── Field change handlers ──────────────────────────────────
   onProvinceChange(): void {
@@ -99,15 +87,15 @@ export class AddressFormComponent implements OnInit, OnDestroy, AfterViewInit {
 
   onCityInput(val: string): void {
     this.data.city = val;
-    const lc = val.toLowerCase();
+    const lc   = val.toLowerCase();
     const list = CITY_SUGGESTIONS[this.data.province] ?? [];
-    this.citySuggestions = list.filter(c => c.toLowerCase().startsWith(lc));
-    this.showSuggestions = this.citySuggestions.length > 0 && val.length > 0;
+    this.citySuggestions  = list.filter(c => c.toLowerCase().startsWith(lc));
+    this.showSuggestions  = this.citySuggestions.length > 0 && val.length > 0;
     this.scheduleGeocode();
   }
 
   selectCity(c: string): void {
-    this.data.city = c;
+    this.data.city       = c;
     this.showSuggestions = false;
     this.scheduleGeocode();
     this.cdr.markForCheck();
@@ -125,33 +113,31 @@ export class AddressFormComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  // ── Geocoding ──────────────────────────────────────────────
+  // ── Geocoding (stores coords in data; no map displayed) ────
   private runGeocode() {
     const { line1, city, province, postalCode } = this.data;
     if (!city && !postalCode) return of(null);
 
     this.geocoding = true;
-    this.geoMsg = '';
+    this.geoMsg    = '';
     this.cdr.markForCheck();
 
     return this.http.post<any>(`${environment.apiUrl}/api/geocode`, {
       line1, city, province, postalCode
     }).pipe(
-      catchError(() => of({ lat: null, lng: null, accuracy: 'NONE' }))
-    ).pipe(
+      catchError(() => of({ lat: null, lng: null, accuracy: 'NONE' })),
       switchMap(res => {
         this.geocoding = false;
         if (res?.lat != null && res?.lng != null) {
-          this.data.lat = res.lat;
-          this.data.lng = res.lng;
+          this.data.lat         = res.lat;
+          this.data.lng         = res.lng;
           this.data.geoAccuracy = res.accuracy;
-          this.geoMsg = this.accuracyLabel(res.accuracy);
-          this.updatePin(res.lat, res.lng);
+          this.geoMsg           = this.accuracyLabel(res.accuracy);
         } else {
-          this.data.lat = null;
-          this.data.lng = null;
+          this.data.lat         = null;
+          this.data.lng         = null;
           this.data.geoAccuracy = 'NONE';
-          this.geoMsg = 'Location not found — pin will be approximate.';
+          this.geoMsg           = '';
         }
         this.cdr.markForCheck();
         this.emit();
@@ -162,50 +148,18 @@ export class AddressFormComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private accuracyLabel(acc: string): string {
     switch (acc) {
-      case 'ADDRESS':     return 'Exact address located ✓';
-      case 'POSTAL_CODE': return 'Approximate — based on postal code';
-      case 'CITY':        return 'Approximate — based on city';
+      case 'ADDRESS':     return '✓ Exact address';
+      case 'POSTAL_CODE': return 'Approximate — postal code';
+      case 'CITY':        return 'Approximate — city only';
       default:            return '';
     }
   }
 
-  // ── Map ────────────────────────────────────────────────────
-  private initMap(): void {
-    const el = document.getElementById(this.mapId);
-    if (!el || this.map) return;
-    this.map = L.map(el, { zoomControl: true, scrollWheelZoom: false })
-                .setView([45.4215, -75.6972], 11);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap', maxZoom: 19
-    }).addTo(this.map);
-    setTimeout(() => this.map?.invalidateSize(), 150);
-  }
-
-  private updatePin(lat: number, lng: number): void {
-    if (!this.map) { this.initMap(); setTimeout(() => this.updatePin(lat, lng), 300); return; }
-    if (this.pin) { this.pin.setLatLng([lat, lng]); }
-    else {
-      this.pin = L.marker([lat, lng], { draggable: true }).addTo(this.map);
-      this.pin.on('dragend', () => {
-        const ll = this.pin!.getLatLng();
-        this.data.lat = ll.lat;
-        this.data.lng = ll.lng;
-        this.data.geoAccuracy = 'MANUAL';
-        this.geoMsg = 'Position set manually';
-        this.cdr.markForCheck();
-        this.emit();
-      });
-    }
-    this.map.setView([lat, lng], 15);
-  }
-
   // ── Emit ───────────────────────────────────────────────────
-  emit(): void {
-    this.changed.emit({ ...this.data });
-  }
+  emit(): void { this.changed.emit({ ...this.data }); }
 }
 
-/** Returns true if the component's required fields are all filled */
+/** Returns the first validation error message for the given address, or null if valid. */
 export function validateAddressData(d: AddressData, requireEmail: boolean): string | null {
   if (!d.contactName?.trim()) return 'Contact name is required.';
   if (!d.phone?.trim())       return 'Phone is required.';

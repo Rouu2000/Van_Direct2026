@@ -1,0 +1,67 @@
+<div class="up-wrap" [class.open]="open()">
+
+  <!-- ── Pill trigger button ─────────────────────────────── -->
+  <button class="up-pill"
+          (click)="toggle($event)"
+          [attr.aria-expanded]="open()"
+          aria-haspopup="true"
+          [attr.aria-label]="'Account menu for ' + firstName()">
+
+    <!-- Avatar with gradient + online dot -->
+    <span class="up-avatar" [style.background]="avatarGradient()" aria-hidden="true">
+      {{ initials() }}
+      <span class="up-online-dot" aria-hidden="true"></span>
+    </span>
+
+    <!-- First name -->
+    <span class="up-name">{{ firstName() }}</span>
+
+    <!-- Role badge -->
+    <span class="up-role-badge" [attr.data-role]="role()">{{ roleLabel() }}</span>
+
+    <!-- Rotating chevron -->
+    <svg class="up-chevron" [class.rotated]="open()"
+         width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M7 10l5 5 5-5z"/>
+    </svg>
+  </button>
+
+  <!-- ── Dropdown ────────────────────────────────────────── -->
+  <div *ngIf="open()"
+       class="up-dropdown"
+       role="menu"
+       (keydown)="onMenuKey($event)"
+       (click)="$event.stopPropagation()">
+
+    <!-- Header: large avatar + full name + email + role badge -->
+    <div class="up-dd-header">
+      <span class="up-avatar up-avatar-lg" [style.background]="avatarGradient()" aria-hidden="true">
+        {{ initials() }}
+        <span class="up-online-dot up-online-dot-lg" aria-hidden="true"></span>
+      </span>
+      <div class="up-dd-info">
+        <span class="up-dd-fullname">{{ fullName() }}</span>
+        <span class="up-dd-email">{{ email() }}</span>
+        <span class="up-role-badge up-role-badge-sm" [attr.data-role]="role()">{{ roleLabel() }}</span>
+      </div>
+    </div>
+
+    <div class="up-dd-sep"></div>
+
+    <!-- Context links (injected by host) -->
+    <ng-container *ngFor="let link of contextLinks">
+      <a [routerLink]="link.route" class="up-dd-item" role="menuitem" (click)="close()">
+        <span class="material-icons up-dd-icon" aria-hidden="true">{{ link.icon }}</span>
+        {{ link.label }}
+      </a>
+    </ng-container>
+
+    <div *ngIf="contextLinks.length > 0" class="up-dd-sep"></div>
+
+    <!-- Sign out -->
+    <button class="up-dd-item up-dd-logout" role="menuitem" (click)="logout()">
+      <span class="material-icons up-dd-icon" aria-hidden="true">logout</span>
+      Sign out
+    </button>
+  </div>
+</div>

@@ -4,6 +4,11 @@
     <h2 class="auth-title">Welcome Back</h2>
     <p class="auth-subtitle">Sign in to continue</p>
 
+    <div *ngIf="sessionBanner" class="vf-session-banner" role="alert">
+      <span class="material-icons" style="font-size:18px;flex-shrink:0">lock_clock</span>
+      {{ sessionBanner }}
+    </div>
+
     <div *ngIf="serverError" class="vf-form-error" role="alert">{{ serverError }}</div>
 
     <form #formEl [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form" novalidate>

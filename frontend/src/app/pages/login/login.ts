@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { BrandLogoComponent } from '../../components/brand-logo/brand-logo.component';
@@ -19,15 +19,17 @@ export class LoginComponent implements OnInit {
   @ViewChild('formEl') formEl!: ElementRef<HTMLFormElement>;
 
   form!: FormGroup;
-  serverError = '';
-  submitting  = false;
-  hidePassword = true;
-  getError    = getError;
+  serverError   = '';
+  sessionBanner = '';   // set when redirected here after a 401
+  submitting    = false;
+  hidePassword  = true;
+  getError      = getError;
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -35,6 +37,14 @@ export class LoginComponent implements OnInit {
     this.form = this.fb.group({
       email:    ['', [Validators.required, emailValidator()]],
       password: ['', [Validators.required]]
+    });
+
+    // Show banner when redirected here after a 401
+    this.route.queryParams.subscribe(params => {
+      if (params['reason'] === 'session_expired') {
+        this.sessionBanner = 'Your session expired. Please sign in again.';
+        this.cdr.markForCheck();
+      }
     });
   }
 

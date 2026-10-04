@@ -17,13 +17,10 @@
 }
 .af-suggestions li { padding: 8px 12px; font-size: .875rem; cursor: pointer; transition: background 120ms; }
 .af-suggestions li:hover { background: var(--bg-2); color: var(--brand); }
-.af-geo-status { margin-top: 8px; min-height: 20px; font-size: .8rem; }
+.af-geo-status { margin-top: 8px; min-height: 18px; font-size: .8rem; }
 .af-geo-loading { display: flex; align-items: center; gap: 6px; color: var(--text-muted); }
-.af-spinner { width: 12px; height: 12px; border: 2px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin .6s linear infinite; display: inline-block; }
-@keyframes spin { to { transform: rotate(360deg); } }
+.af-spinner { width: 12px; height: 12px; border: 2px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: af-spin .6s linear infinite; display: inline-block; }
+@keyframes af-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .af-spinner { animation: none; } }
 .af-geo-ok   { color: var(--success); font-weight: 600; }
 .af-geo-warn { color: var(--warning); font-weight: 600; }
-.af-geo-msg  { }
-.af-map-wrap { margin-top: 12px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); }
-.af-map { height: 200px; width: 100%; }
-.af-map-hint { font-size: .75rem; color: var(--text-muted); padding: 4px 8px; background: var(--surface-2); text-align: center; }
